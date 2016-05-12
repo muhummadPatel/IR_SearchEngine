@@ -52,7 +52,7 @@ for line in f:
                    if parameters.case_folding:
                        document += line.lower()
                    else:
-                       document += line    
+                       document += line
 f.close ()
 
 # document length/title file
@@ -79,7 +79,7 @@ for key in data:
                     index[word][key] = 1
                 else:
                     index[word][key] += 1
-    print (key, doc_length, titles[key], sep=':', file=g) 
+    print (key, doc_length, titles[key], sep=':', file=g)
 
 # document length/title file
 g.close ()
@@ -99,4 +99,3 @@ for key in index:
 f = open (collection+"_index_N", "w")
 print (N, file=f)
 f.close ()
-    
