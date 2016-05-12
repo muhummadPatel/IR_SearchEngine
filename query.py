@@ -103,7 +103,8 @@ if not parameters.BRF: # If BRF is disabled, just print the top k results as per
 else: # 1) Take the results returned by initial query as relevant results (only top k with k being between 10 to 50 in most experiments).
     for i in range (min (len (result), k)):
         docIDs.append(result[i]) # Store the doc ids of the top k documents
-    print(docIDs)
+print("IDs of the top k  documents")
+print(docIDs)
 
 # 2)Select top 20-30 (indicative number) terms from these documents using for instance tf-idf weights.
 # To get these terms I could either go through each term in every document or i could through every term's index file
@@ -137,7 +138,7 @@ for term in itfs:
     tf = itfs[term]
 
 # Don't think we can just naively do this the same way he does it for documents
-#    if parameters.log_idf:
+#   if parameters.log_idf:
 #        df = math.log (1 + N/idfs[term])
 #
 #    if parameters.log_tf:
@@ -148,8 +149,58 @@ for term in itfs:
 # Sort the term rankings
 result = sorted (term_accum, key=term_accum.__getitem__, reverse=True)
 
+# 3.1. Do Query Expansion, add these terms to query.
 # Expand the query - add the tK most popular words from the initial set
 for i in range (0, tK):
     query_words.append(result[i])
 
+print("Expanded query words: " )
 print(query_words)
+
+# 3.2. and then match the returned documents for this query and finally return the most relevant documents.
+# Copy and pasting his code from above for now, will sort into functions later
+
+accum.clear()
+# get index for each term and calculate similarities using accumulators
+for term in query_words:
+    if term != '':
+        if parameters.stemming:
+            term = p.stem (term, 0, len(term)-1)
+        if not os.path.isfile (collection+"_index/"+term):
+           continue
+        f = open (collection+"_index/"+term, "r")
+        lines = f.readlines ()
+        idf = 1
+        if parameters.use_idf:
+           df = len(lines)
+           idf = 1/df
+           if parameters.log_idf:
+              idf = math.log (1 + N/df)
+        for line in lines:
+            mo = re.match (r'([0-9]+)\:([0-9\.]+)', line)
+            if mo:
+                file_id = mo.group(1)
+                tf = float (mo.group(2))
+                if not file_id in accum:
+                    accum[file_id] = 0
+                if parameters.log_tf:
+                    tf = (1 + math.log (tf))
+                accum[file_id] += (tf * idf)
+        f.close()
+
+# parse lengths data and divide by |N| and get titles
+for l in lengths:
+   mo = re.match (r'([0-9]+)\:([0-9\.]+)\:(.+)', l)
+   if mo:
+      document_id = mo.group (1)
+      length = eval (mo.group (2))
+      title = mo.group (3)
+      if document_id in accum:
+         if parameters.normalization:
+            accum[document_id] = accum[document_id] / length
+         titles[document_id] = title
+
+# print top k results if BRF not enabled
+result = sorted (accum, key=accum.__getitem__, reverse=True)
+for i in range (min (len (result), k)):
+    print ("{0:10.8f} {1:5} {2}".format (accum[result[i]], result[i], titles[result[i]]))
