@@ -9,3 +9,5 @@ log_tf = True
 use_idf = True
 log_idf = True
 BRF = True
+BRF_k = 10
+BRF_tK = 20
