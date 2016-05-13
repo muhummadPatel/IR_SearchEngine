@@ -5,6 +5,7 @@
 import os
 import re
 import sys
+import glob
 
 import porter
 
@@ -16,6 +17,22 @@ if len(sys.argv)==1:
    exit(0)
 collection = sys.argv[1]
 
+titles = {}
+data = {}
+
+filenames = glob.glob(collection + "/document.*") # Get list of filenames
+for f in filenames: # Store the title and contents of every file into the titles and data dictionary
+    title = f[f.find("/")+1:]
+    docNo = f[f.find(".")+1:]
+
+    contents = open(f,"r")
+    titles[docNo] = title
+    data[docNo] = contents.read().replace('\n','')
+
+    contents.close()
+
+#exit(0)
+'''
 # read and parse input data - extract words, identifiers and titles
 f = open (collection, "r")
 identifier = ''
@@ -52,9 +69,9 @@ for line in f:
                    if parameters.case_folding:
                        document += line.lower()
                    else:
-                       document += line    
+                       document += line
 f.close ()
-
+'''
 # document length/title file
 g = open (collection + "_index_len", "w")
 
@@ -79,7 +96,7 @@ for key in data:
                     index[word][key] = 1
                 else:
                     index[word][key] += 1
-    print (key, doc_length, titles[key], sep=':', file=g) 
+    print (key, doc_length, titles[key], sep=':', file=g)
 
 # document length/title file
 g.close ()
@@ -99,4 +116,3 @@ for key in index:
 f = open (collection+"_index_N", "w")
 print (N, file=f)
 f.close ()
-    
