@@ -17,6 +17,10 @@ if len(sys.argv)==1:
    exit(0)
 collection = sys.argv[1]
 
+if not os.path.isdir(collection):
+    print("Collection", collection, "not found.")
+    exit(0)
+
 titles = {}
 data = {}
 
@@ -31,47 +35,6 @@ for f in filenames: # Store the title and contents of every file into the titles
 
     contents.close()
 
-#exit(0)
-'''
-# read and parse input data - extract words, identifiers and titles
-f = open (collection, "r")
-identifier = ''
-document = ''
-title = ''
-indocument = False
-intitle = False
-data = {}
-titles = {}
-for line in f:
-    mo = re.match (r'\.I ([0-9]+)', line)
-    if mo:
-        if document!='':
-            data[identifier] = document
-        identifier = mo.group (1)
-        indoc = False
-    else:
-        mo = re.match (r'\.T', line)
-        if mo:
-           title = ''
-           intitle = True
-        else:
-           mo = re.match (r'\.W', line)
-           if mo:
-               document = ''
-               indoc = True
-           else:
-               if intitle:
-                   intitle = False
-                   if identifier!='':
-                      titles[identifier] = line[:-1][:50]
-               elif indoc:
-                   document += " "
-                   if parameters.case_folding:
-                       document += line.lower()
-                   else:
-                       document += line
-f.close ()
-'''
 # document length/title file
 g = open (collection + "_index_len", "w")
 
