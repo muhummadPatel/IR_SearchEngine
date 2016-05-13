@@ -25,7 +25,7 @@ for f in filenames: # Store the title and contents of every file into the titles
     title = f[f.find("/")+1:]
     docNo = f[f.find(".")+1:]
 
-    contents = open(f,"r")
+    contents = open(f, "r", encoding='utf-8', errors='ignore')
     titles[docNo] = title
     data[docNo] = contents.read().replace('\n','')
 
