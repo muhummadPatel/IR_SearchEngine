@@ -50,7 +50,8 @@ for key in data:
             if parameters.stemming:
                 word = p.stem(word, 0, len(word) - 1)
             doc_length += 1
-            word = word.lower()
+            if parameters.case_folding:
+                word = word.lower()
             if word not in index:
                 index[word] = {key: 1}
             else:

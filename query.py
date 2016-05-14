@@ -159,8 +159,12 @@ def get_result(collection, query):
     for i in range(min(len(result), parameters.BRF_k)):
         doc_ids.append(result[i])  # Store the doc ids of the top k documents
 
-    stop_words_file = open("stop-word-list.txt", "r")
-    stop_words = set(stop_words_file.read().splitlines())
+    # Stop words is an empty set unless parameter is set
+    stop_words = set()
+    if parameters.stop_words:
+        stop_words_file = open("stop-word-list.txt", "r")
+        stop_words = set(stop_words_file.read().splitlines())
+
     accum, titles = BRF(collection, doc_ids, query, stop_words)
     result = sorted(accum, key=accum.__getitem__, reverse=True)
 
