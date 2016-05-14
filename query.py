@@ -2,14 +2,15 @@
 # Hussein Suleman
 # 14 April 2016
 
-import re
-import math
-import sys
-import os
-
-import porter
-import parameters
 import glob
+import math
+import os
+import re
+import sys
+
+import parameters
+import porter
+from parameters import dprint
 
 
 def clean_query(query):
@@ -25,7 +26,6 @@ def clean_query(query):
 def run_query(collection, query_words):
     # create accumulators and other data structures
     accum = {}
-    filenames = []
     p = porter.PorterStemmer()
 
     # get document lengths/titles
@@ -35,7 +35,7 @@ def run_query(collection, query_words):
     f.close()
 
     # get N
-    N = len(lengths)
+    n = len(lengths)
 
     # get index for each term and calculate similarities using accumulators
     for term in query_words:
@@ -51,13 +51,13 @@ def run_query(collection, query_words):
                 df = len(lines)
                 idf = 1 / df
                 if parameters.log_idf:
-                    idf = math.log(1 + N / df)
+                    idf = math.log(1 + n / df)
             for line in lines:
-                mo = re.match(r'([0-9]+)\:([0-9\.]+)', line)
+                mo = re.match(r'([0-9]+):([0-9\.]+)', line)
                 if mo:
                     file_id = mo.group(1)
                     tf = float(mo.group(2))
-                    if not file_id in accum:
+                    if file_id not in accum:
                         accum[file_id] = 0
                     if parameters.log_tf:
                         tf = (1 + math.log(tf))
@@ -66,7 +66,7 @@ def run_query(collection, query_words):
 
     # parse lengths data and divide by |N| and get titles
     for l in lengths:
-        mo = re.match(r'([0-9]+)\:([0-9\.]+)\:(.+)', l)
+        mo = re.match(r'([0-9]+):([0-9\.]+):(.+)', l)
         if mo:
             document_id = mo.group(1)
             length = eval(mo.group(2))
@@ -83,7 +83,7 @@ def run_query(collection, query_words):
 # To get these terms I could either go through each term in every document or i could through every term's index file
 # I chose the latter else i'd be duplicating code of index.py (and to avoid regexes)
 
-def BRF(collection, docIDs, query, stop_words):
+def BRF(collection, doc_ids, query, stop_words):
     idfs = {}  # Document frequencies for the BRF most popular terms
     itfs = {}  # Term frequencies for the BRF most popular terms
     term_accum = {}  # Overall ranking of each term
@@ -91,20 +91,22 @@ def BRF(collection, docIDs, query, stop_words):
     query_words = clean_query(query)
     filenames = glob.glob(collection + "_brf_index" + "/word_count.*")  # Get list of filenames
     for f in filenames:
-        docNo = f[f.find(".") + 1:]
-        if docNo in docIDs:
+        doc_no = f[f.find(".") + 1:]
+        if doc_no in doc_ids:
             contents = open(f, "r", encoding='utf-8')
-            lines = contents.readlines()
+            lines = contents.read().splitlines()
             for line in lines:  # Go through all the entries in the brf index file
-                mo = re.match(r'(.+)\:([0-9\.]+)', line)
+                mo = re.match(r'(.+):([0-9\.]+)', line)
                 if mo:
                     word = mo.group(1)
                     tf = mo.group(2)
-                    if not word in itfs:  # Increment the term frequency by the number of times is appears in the document
+                    # Increment the term frequency by the number of times is appears in the document
+                    if word not in itfs:
                         itfs[word] = tf
                     else:
                         itfs[word] += tf
-                    if not word in idfs:  # Increment the number of documents the term appears in by 1. Document frequency is local to the result set, not the entire document set
+                    # Increment the number of documents the term appears in by 1. Document frequency is local to the result set, not the entire document set
+                    if word not in idfs:
                         idfs[word] = 1
                     else:
                         idfs[word] += 1
@@ -122,7 +124,6 @@ def BRF(collection, docIDs, query, stop_words):
     #    if parameters.log_tf:
     #        tf = (1 + math.log (tf))
 
-
     # Sort the term rankings
     result = sorted(term_accum, key=term_accum.__getitem__, reverse=True)
 
@@ -130,13 +131,13 @@ def BRF(collection, docIDs, query, stop_words):
     # Expand the query - add the tK most popular words from the initial set
 
     i = 0
-    while (len(query_words) < parameters.BRF_tK):
+    while len(query_words) < parameters.BRF_tK:
         if result[i] not in stop_words and result[i] not in query_words:
             query_words.append(result[i])
         i += 1
 
-    # print("Expanded query words: " )
-    # print(query_words)
+    dprint("Expanded query words: ")
+    dprint(query_words)
 
     # 3.2. and then match the returned documents for this query and finally return the most relevant documents.
     # Copy and pasting his code from above for now, will sort into functions later
@@ -154,14 +155,13 @@ def get_result(collection, query):
     if not parameters.BRF:
         return accum, result[0:min(len(result), 10)], titles
 
-    docIDs = []
+    doc_ids = []
     for i in range(min(len(result), parameters.BRF_k)):
-        docIDs.append(result[i])  # Store the doc ids of the top k documents
+        doc_ids.append(result[i])  # Store the doc ids of the top k documents
 
     stop_words_file = open("stop-word-list.txt", "r")
     stop_words = set(stop_words_file.read().splitlines())
-    print(stop_words)
-    accum, titles = BRF(collection, docIDs, query, stop_words)
+    accum, titles = BRF(collection, doc_ids, query, stop_words)
     result = sorted(accum, key=accum.__getitem__, reverse=True)
 
     if parameters.BRF:
@@ -183,9 +183,6 @@ def main():
         arg_index += 1
 
     print("BRF Status: " + str(parameters.BRF))
-    accum = {}
-    titles = {}
-
     accum, final_result, titles = get_result(collection, query)
 
     for i in range(len(final_result)):

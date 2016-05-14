@@ -10,9 +10,9 @@ import parameters
 import porter
 
 # check parameter for collection name
-if len(sys.argv)==1:
-   print ("Syntax: index.py <collection>")
-   exit(0)
+if len(sys.argv) == 1:
+    print("Syntax: index.py <collection>")
+    exit(0)
 collection = sys.argv[1]
 
 if not os.path.isdir(collection):
@@ -22,72 +22,72 @@ if not os.path.isdir(collection):
 titles = {}
 data = {}
 
-filenames = glob.glob(collection + "/document.*") # Get list of filenames
-for f in filenames: # Store the title and contents of every file into the titles and data dictionary
-    title = f[f.find("/")+1:]
-    docNo = f[f.find(".")+1:]
+filenames = glob.glob(collection + "/document.*")  # Get list of filenames
+for f in filenames:  # Store the title and contents of every file into the titles and data dictionary
+    title = f[f.find("/") + 1:]
+    docNo = f[f.find(".") + 1:]
 
     contents = open(f, "r", encoding='utf-8', errors='ignore')
     titles[docNo] = title
-    data[docNo] = contents.read().replace('\n',' ')
+    data[docNo] = contents.read().replace('\n', ' ')
     contents.close()
 
 # document length/title file
-g = open (collection + "_index_len", "w")
+g = open(collection + "_index_len", "w")
 
 # create inverted files in memory and save titles/N to file
 index = {}
 brf_index = {}
-N = len (data.keys())
-p = porter.PorterStemmer ()
+N = len(data.keys())
+p = porter.PorterStemmer()
 for key in data:
-    content = re.sub (r'[^ a-zA-Z0-9]', ' ', data[key])
-    content = re.sub (r'\s+', ' ', content)
-    words = content.split (' ')
+    content = re.sub(r'[^ a-zA-Z0-9]', ' ', data[key])
+    content = re.sub(r'\s+', ' ', content)
+    words = content.split(' ')
     doc_length = 0
     for word in words:
         if word != '':
             if parameters.stemming:
-                word = p.stem (word, 0, len(word)-1)
+                word = p.stem(word, 0, len(word) - 1)
             doc_length += 1
             word = word.lower()
-            if not word in index:
-                index[word] = {key:1}
+            if word not in index:
+                index[word] = {key: 1}
             else:
-                if not key in index[word]:
+                if key not in index[word]:
                     index[word][key] = 1
                 else:
                     index[word][key] += 1
-            if not key in brf_index:
-                brf_index[key] = {word:1}
+            if key not in brf_index:
+                brf_index[key] = {word: 1}
             else:
-                if not word in brf_index[key]:
+                if word not in brf_index[key]:
                     brf_index[key][word] = 1
                 else:
                     brf_index[key][word] += 1
-    print (key, doc_length, titles[key], sep=':', file=g)
+    print(key, doc_length, titles[key], sep=':', file=g)
 
 # document length/title file
-g.close ()
+g.close()
 
 # write inverted index to files
 try:
-   os.mkdir (collection+"_index")
+    os.mkdir(collection + "_index")
 except:
-   pass
+    pass
 for key, value in index.items():
-    f = open (collection+"_index/"+key, "w")
+    f = open(collection + "_index/" + key, "w")
     for entry, entry_value in value.items():
-        print (entry, entry_value, sep=':', file=f)
-    f.close ()
+        print(entry, entry_value, sep=':', file=f)
+    f.close()
 
 # write brf index to files
 try:
-   os.mkdir (collection+"_brf_index")
+    os.mkdir(collection + "_brf_index")
 except:
-   pass
+    pass
 for key, value in brf_index.items():
-    brf_file = open (collection+"_brf_index/"+"word_count"+"."+key,"w")
+    brf_file = open(collection + "_brf_index/" + "word_count" + "." + key, "w")
     for entry, entry_value in value.items():
-        print (entry, entry_value, sep=':', file=brf_file)
+        print(entry, entry_value, sep=':', file=brf_file)
     brf_file.close()
