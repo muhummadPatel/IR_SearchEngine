@@ -5,17 +5,26 @@ import sys
 import query as query_tool
 import parameters
 
+# set verbose=True to enable debug printlines
+verbose = False
+
+
+def dprint(*args, end="\n"):
+    global verbose
+    if verbose:
+        print(args, end)
+
 def get_queries(collection):
     collection_filenames = os.listdir(collection)
     query_filenames = [name for name in collection_filenames if "query" in name]
-    # print(query_filenames)
+    dprint("query filenames:", query_filenames)
 
     queries = []
     for query_file in query_filenames:
         query_filepath = os.path.join(collection, query_file)
         with open(query_filepath, "r") as q:
             queries.append(q.readlines()[0])
-    # print(queries)
+    dprint("queries:", queries)
 
     return queries
 
@@ -23,7 +32,7 @@ def get_queries(collection):
 def get_relevances(collection):
     collection_filenames = os.listdir(collection)
     relevance_filenames = [name for name in collection_filenames if "relevance" in name]
-    # print(relevance_filenames)
+    dprint("relevance filenames:", relevance_filenames)
 
     relevances = []
     for rel_file in relevance_filenames:
@@ -31,8 +40,8 @@ def get_relevances(collection):
         with open(rel_filepath, "r") as r:
             int_rels = [int(i) for i in r.readlines()]
             relevances.append(int_rels)
-    # print(relevances)
-    # print(len(relevances[0]))
+    dprint("relevances:", relevances)
+    dprint("# relevance judgements for query 1:", len(relevances[0]))
 
     return relevances
 
@@ -41,7 +50,7 @@ def get_MAP(collection, queries, relevances):
     query_count = 0
     avg_precision_sum = 0.0
     for query_idx, test_query in enumerate(queries):
-        # print("query:", test_query)
+        dprint("query for MAP:", test_query)
         similarity, result, titles = query_tool.get_result(collection, test_query)
 
         result_count = 0
@@ -51,14 +60,14 @@ def get_MAP(collection, queries, relevances):
             relevance_of_result = relevances[query_idx][int(result[i])-1] / 2.0
             precision_sum += relevance_of_result / result_count
 
-            # print("{0:10.8f} {1:5} {2}".format(similarity[result[i]], result[i], titles[result[i]]), end=" ")
-            # print(relevance_of_result)
-        # print()
+            dprint("{0:10.8f} {1:5} {2}".format(similarity[result[i]], result[i], titles[result[i]]), end=" ")
+            dprint(relevance_of_result)
+        dprint()
 
         query_count += 1
         avg_precision_sum += precision_sum / query_count
 
-    # print("~> Mean Average Precision:", avg_precision_sum / query_count)
+    dprint("~> Mean Average Precision:", avg_precision_sum / query_count)
     return avg_precision_sum / query_count
 
 
@@ -70,8 +79,8 @@ def get_NDCG(collection, test_query, query_relevances):
 
     actual_relevances = [query_relevances[int(r)-1] for r in result]
     ideal_relevances = sorted(actual_relevances, reverse=True)
-    # print(actual_relevances)
-    # print(ideal_relevances)
+    dprint("actual_relevances:", actual_relevances)
+    dprint("ideal_relevances:", ideal_relevances)
 
     disc_cum_gain = 0
     ideal_disc_cum_gain = 0
@@ -86,9 +95,9 @@ def get_NDCG(collection, test_query, query_relevances):
         return norm_disc_cum_gain
     except ZeroDivisionError:
         # TODO: Figure out how to handle this properly
-        # print("ZeroDivError", disc_cum_gain, ideal_disc_cum_gain)
-        # print("Actual relevances:", actual_relevances)
-        # print("Ideal relevances:", ideal_relevances)
+        dprint("ZeroDivError", disc_cum_gain, ideal_disc_cum_gain)
+        dprint("actual_relevances:", actual_relevances)
+        dprint("ideal_relevances:", ideal_relevances)
         return -1
 
 def main(collection):
