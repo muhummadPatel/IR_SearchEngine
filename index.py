@@ -1,15 +1,13 @@
 # Simple extended boolean search engine: indexer based on cranfield format
 # Hussein Suleman
 # 21 April 2016
-
+import glob
 import os
 import re
 import sys
-import glob
-
-import porter
 
 import parameters
+import porter
 
 # check parameter for collection name
 if len(sys.argv)==1:
@@ -31,8 +29,7 @@ for f in filenames: # Store the title and contents of every file into the titles
 
     contents = open(f, "r", encoding='utf-8', errors='ignore')
     titles[docNo] = title
-    data[docNo] = contents.read().replace('\n','')
-
+    data[docNo] = contents.read().replace('\n',' ')
     contents.close()
 
 # document length/title file
