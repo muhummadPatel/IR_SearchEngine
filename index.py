@@ -40,6 +40,7 @@ g = open (collection + "_index_len", "w")
 
 # create inverted files in memory and save titles/N to file
 index = {}
+brf_index = {}
 N = len (data.keys())
 p = porter.PorterStemmer ()
 for key in data:
@@ -59,6 +60,13 @@ for key in data:
                     index[word][key] = 1
                 else:
                     index[word][key] += 1
+            if not key in brf_index:
+                brf_index[key] = {word:1}
+            else:
+                if not word in brf_index[key]:
+                    brf_index[key][word] = 1
+                else:
+                    brf_index[key][word] += 1
     print (key, doc_length, titles[key], sep=':', file=g)
 
 # document length/title file
@@ -69,11 +77,22 @@ try:
    os.mkdir (collection+"_index")
 except:
    pass
-for key in index:
+for key, value in index.items():
     f = open (collection+"_index/"+key, "w")
-    for entry in index[key]:
-        print (entry, index[key][entry], sep=':', file=f)
+    for entry, entry_value in value.items():
+        print (entry, entry_value, sep=':', file=f)
     f.close ()
+
+# write brf index to files
+try:
+   os.mkdir (collection+"_brf_index")
+except:
+   pass
+for key, value in brf_index.items():
+    brf_file = open (collection+"_brf_index/"+"word_count"+"."+key,"w")
+    for entry, entry_value in value.items():
+        print (entry, entry_value, sep=':', file=brf_file)
+    brf_file.close()
 
 # write N
 f = open (collection+"_index_N", "w")
