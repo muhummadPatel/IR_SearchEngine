@@ -73,4 +73,8 @@ def main(collection):
     print("MAP after BRF:", map_after)
 
 if __name__ == "__main__":
+    if len(sys.argv) < 2:
+       print ("Syntax: report.py <collection>")
+       exit(0)
+
     main(sys.argv[1])
