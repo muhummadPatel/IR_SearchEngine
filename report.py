@@ -1,3 +1,4 @@
+import math
 import os
 import sys
 
@@ -61,6 +62,35 @@ def get_MAP(collection, queries, relevances):
     return avg_precision_sum / query_count
 
 
+# Pass in a single query and the set of relevance judgements for that query
+# because NDCG is calculated for a single query (whereas MAP is calculated for
+# a group of queries)
+def get_NDCG(collection, test_query, query_relevances):
+    similarity, result, titles = query_tool.get_result(collection, test_query)
+
+    actual_relevances = [query_relevances[int(r)-1] for r in result]
+    ideal_relevances = sorted(actual_relevances, reverse=True)
+    # print(actual_relevances)
+    # print(ideal_relevances)
+
+    disc_cum_gain = 0
+    ideal_disc_cum_gain = 0
+    for i in range(len(result)):
+
+        # need to use i+2 because i starts at 0, not 1
+        disc_cum_gain += (actual_relevances[i] / math.log(i + 2, 2))
+        ideal_disc_cum_gain += (ideal_relevances[i] / math.log(i + 2, 2))
+
+    try:
+        norm_disc_cum_gain = disc_cum_gain / ideal_disc_cum_gain
+        return norm_disc_cum_gain
+    except ZeroDivisionError:
+        # TODO: Figure out how to handle this properly
+        # print("ZeroDivError", disc_cum_gain, ideal_disc_cum_gain)
+        # print("Actual relevances:", actual_relevances)
+        # print("Ideal relevances:", ideal_relevances)
+        return -1
+
 def main(collection):
     queries = get_queries(collection)
     relevances = get_relevances(collection)
@@ -69,8 +99,25 @@ def main(collection):
     map_before = get_MAP(collection, queries, relevances)
     parameters.BRF = True
     map_after = get_MAP(collection, queries, relevances)
+
+    print("_____ Mean average precision for", collection,"_____")
     print("MAP before BRF:", map_before)
-    print("MAP after BRF:", map_after)
+    print("MAP after BRF:", map_after, "\n")
+
+    # Have to use a loop for NDCG calculations because NDCG is done per query
+    # not per set of queries like MAP
+    print("_____ NDCG for queries in", collection,"_____")
+    for i in range(len(queries)):
+        parameters.BRF=False
+        ndcg_before = get_NDCG(collection, queries[i], relevances[i])
+        parameters.BRF=True
+        ndcg_after = get_NDCG(collection, queries[i], relevances[i])
+
+        print("query:", queries[i].strip())
+        print("NDCG before BRF:", ndcg_before)
+        print("NDCG after BRF:", ndcg_after, "\n")
+
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
