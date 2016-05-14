@@ -134,8 +134,8 @@ def BRF(collection, docIDs, query):
             query_words.append(result[i])
         i+=1
 
-    print("Expanded query words: " )
-    print(query_words)
+    # print("Expanded query words: " )
+    # print(query_words)
 
     # 3.2. and then match the returned documents for this query and finally return the most relevant documents.
     # Copy and pasting his code from above for now, will sort into functions later
