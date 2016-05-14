@@ -9,6 +9,7 @@ import os
 
 import porter
 import parameters
+import glob
 
 def clean_query(query):
     # clean query
@@ -25,10 +26,7 @@ def run_query(collection, query_words):
     filenames = []
     p = porter.PorterStemmer ()
 
-    # get N
-    f = open (collection+"_index_N", "r")
-    N = eval (f.read ())
-    f.close ()
+
 
     # get document lengths/titles
     titles = {}
@@ -36,6 +34,8 @@ def run_query(collection, query_words):
     lengths = f.readlines ()
     f.close ()
 
+    # get N
+    N = len(lengths)
 
     # get index for each term and calculate similarities using accumulators
     for term in query_words:
@@ -88,33 +88,32 @@ def BRF(collection, docIDs, query):
     term_accum = {}  # Overall ranking of each term
 
     query_words = clean_query(query)
-    indexFiles = os.listdir(collection+"_index") # Get list of all index files
-
-    for index in indexFiles:
-        f = open (collection+"_index/"+index, "r")
-        lines = f.readlines()
-        for line in lines: # Go through all the entries in the index file
-            mo = re.match (r'([0-9]+)\:([0-9\.]+)', line)
-            if mo:
-                file_id = mo.group(1)
-                tf = float (mo.group(2))
-                if not file_id in docIDs: # Skip if its not one of the files in the result set
-                    continue
-                else:
-                    if not index in itfs: # Increment the term frequency by the number of times is appears in the document
-                        itfs[index] = tf
-                    else:
-                        itfs[index] = itfs[index] + tf
-                    if not index in idfs: # Increment the number of documents the term appears in by 1. Document frequency is local to the result set, not the entire document set
-                        idfs[index] = 1
-                    else:
-                        idfs[index] = idfs[index] + 1
+    filenames = glob.glob(collection+ "_brf_index" + "/word_count.*") # Get list of filenames
+    for f in filenames:
+        docNo = f[f.find(".")+1:]
+        if docNo in docIDs:
+            contents = open(f, "r", encoding='utf-8')
+            lines = contents.readlines()
+            for line in lines: # Go through all the entries in the brf index file
+                    mo = re.match (r'(.+)\:([0-9\.]+)', line)
+                    if mo:
+                        word = mo.group(1)
+                        tf = mo.group(2)
+                        if not word in itfs: # Increment the term frequency by the number of times is appears in the document
+                            itfs[word] = tf
+                        else:
+                            itfs[word] += tf
+                        if not word in idfs: # Increment the number of documents the term appears in by 1. Document frequency is local to the result set, not the entire document set
+                            idfs[word] = 1
+                        else:
+                            idfs[word] += 1
+            contents.close()
 
     # Calculate the overall "rank" of each term by tf / df
     for term in itfs:
-        df = 1/idfs[term]
+        df = 1.0/idfs[term]
         tf = itfs[term]
-        term_accum[term] = (tf * df)
+        term_accum[term] = (float(tf) * float(df))
     # Don't think we can just naively do this the same way he does it for documents
     #   if parameters.log_idf:
     #        df = math.log (1 + N/idfs[term])
@@ -123,17 +122,20 @@ def BRF(collection, docIDs, query):
     #        tf = (1 + math.log (tf))
 
 
-
     # Sort the term rankings
     result = sorted (term_accum, key=term_accum.__getitem__, reverse=True)
 
     # 3.1. Do Query Expansion, add these terms to query.
     # Expand the query - add the tK most popular words from the initial set
-    for i in range (0, min(len(result), parameters.BRF_tK)):
-        query_words.append(result[i])
 
-    # print("Expanded query words: " )
-    # print(query_words)
+    i = 0
+    while(i < parameters.BRF_tK):
+        if result[i] not in query_words:
+            query_words.append(result[i])
+        i+=1
+
+    print("Expanded query words: " )
+    print(query_words)
 
     # 3.2. and then match the returned documents for this query and finally return the most relevant documents.
     # Copy and pasting his code from above for now, will sort into functions later
@@ -156,6 +158,7 @@ def main():
        query += sys.argv[arg_index] + ' '
        arg_index += 1
 
+    print("BRF Status: " + str(parameters.BRF))
 
     # print top k results if BRF not enabled
     accum,titles = run_query(collection, clean_query(query))
