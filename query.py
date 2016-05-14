@@ -144,6 +144,23 @@ def BRF(collection, docIDs, query):
     accum, titles = run_query(collection, query_words)
     return accum, titles
 
+def get_result(collection, query):
+    # print top k results if BRF not enabled
+    accum,titles = run_query(collection, clean_query(query))
+    result = sorted (accum, key=accum.__getitem__, reverse=True)
+
+    if not parameters.BRF:
+        return accum, result[0:min (len (result), 10)], titles
+
+    docIDs = []
+    for i in range (min (len (result), parameters.BRF_k)):
+        docIDs.append(result[i]) # Store the doc ids of the top k documents
+    accum, titles = BRF(collection, docIDs, query)
+    result = sorted (accum, key=accum.__getitem__, reverse=True)
+
+    if parameters.BRF:
+        return accum, result[0:min (len (result), parameters.BRF_k)], titles
+
 def main():
     # check parameter for collection name
     if len(sys.argv)<3:
@@ -155,29 +172,18 @@ def main():
     query = ''
     arg_index = 2
     while arg_index < len(sys.argv):
-       query += sys.argv[arg_index] + ' '
-       arg_index += 1
+        query += sys.argv[arg_index] + ' '
+        arg_index += 1
 
-    # print("BRF Status: " + str(parameters.BRF))
+    print("BRF Status: " + str(parameters.BRF))
+    accum = {}
+    titles = {}
+    accum, final_result, titles = get_result(collection, query)
 
-    # print top k results if BRF not enabled
-    accum,titles = run_query(collection, clean_query(query))
-    result = sorted (accum, key=accum.__getitem__, reverse=True)
+    for i in range (len (final_result)):
+        print ("{0:10.8f} {1:5} {2}".format (accum[final_result[i]], final_result[i], titles[final_result[i]]))
 
-    if not parameters.BRF:
-        for i in range (min (len (result), parameters.BRF_k)):
-            print ("{0:10.8f} {1:5} {2}".format (accum[result[i]], result[i], titles[result[i]]))
-        return
 
-    docIDs = []
-    for i in range (min (len (result), parameters.BRF_k)):
-        docIDs.append(result[i]) # Store the doc ids of the top k documents
-    accum, titles = BRF(collection, docIDs, query)
-    result = sorted (accum, key=accum.__getitem__, reverse=True)
-
-    if parameters.BRF:
-        for i in range (min (len (result), parameters.BRF_k)):
-            print ("{0:10.8f} {1:5} {2}".format (accum[result[i]], result[i], titles[result[i]]))
 
 if __name__ == "__main__":
     main()
