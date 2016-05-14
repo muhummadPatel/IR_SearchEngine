@@ -88,14 +88,14 @@ def BRF(collection, docIDs, query):
     term_accum = {}  # Overall ranking of each term
 
     query_words = clean_query(query)
-    filenames = glob.glob(collection + "/word_count.*") # Get list of filenames
+    filenames = glob.glob(collection+ "_brf_index" + "/word_count.*") # Get list of filenames
     for f in filenames:
         docNo = f[f.find(".")+1:]
         if docNo in docIDs:
-            contents = open(f, "r", encoding='utf-8', errors='ignore')
-            lines = f.readlines()
+            contents = open(f, "r", encoding='utf-8')
+            lines = contents.readlines()
             for line in lines: # Go through all the entries in the brf index file
-                    mo = re.match (r'(.+)\:([0-9\.])+)', line)
+                    mo = re.match (r'(.+)\:([0-9\.]+)', line)
                     if mo:
                         word = mo.group(1)
                         tf = mo.group(2)
@@ -111,9 +111,9 @@ def BRF(collection, docIDs, query):
 
     # Calculate the overall "rank" of each term by tf / df
     for term in itfs:
-        df = 1/idfs[term]
+        df = 1.0/idfs[term]
         tf = itfs[term]
-        term_accum[term] = (tf * df)
+        term_accum[term] = (float(tf) * float(df))
     # Don't think we can just naively do this the same way he does it for documents
     #   if parameters.log_idf:
     #        df = math.log (1 + N/idfs[term])
@@ -122,17 +122,20 @@ def BRF(collection, docIDs, query):
     #        tf = (1 + math.log (tf))
 
 
-
     # Sort the term rankings
     result = sorted (term_accum, key=term_accum.__getitem__, reverse=True)
 
     # 3.1. Do Query Expansion, add these terms to query.
     # Expand the query - add the tK most popular words from the initial set
-    for i in range (0, min(len(result), parameters.BRF_tK)):
-        query_words.append(result[i])
 
-    # print("Expanded query words: " )
-    # print(query_words)
+    i = 0
+    while(i < parameters.BRF_tK):
+        if result[i] not in query_words:
+            query_words.append(result[i])
+        i+=1
+
+    print("Expanded query words: " )
+    print(query_words)
 
     # 3.2. and then match the returned documents for this query and finally return the most relevant documents.
     # Copy and pasting his code from above for now, will sort into functions later
@@ -155,6 +158,7 @@ def main():
        query += sys.argv[arg_index] + ' '
        arg_index += 1
 
+    print("BRF Status: " + str(parameters.BRF))
 
     # print top k results if BRF not enabled
     accum,titles = run_query(collection, clean_query(query))

@@ -93,8 +93,3 @@ for key, value in brf_index.items():
     for entry, entry_value in value.items():
         print (entry, entry_value, sep=':', file=brf_file)
     brf_file.close()
-
-# write N
-f = open (collection+"_index_N", "w")
-print (N, file=f)
-f.close ()
