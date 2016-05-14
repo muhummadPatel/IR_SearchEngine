@@ -114,7 +114,7 @@ def BRF(collection, docIDs, query):
     for term in itfs:
         df = 1/idfs[term]
         tf = itfs[term]
-
+        term_accum[term] = (tf * df)
     # Don't think we can just naively do this the same way he does it for documents
     #   if parameters.log_idf:
     #        df = math.log (1 + N/idfs[term])
@@ -122,7 +122,7 @@ def BRF(collection, docIDs, query):
     #    if parameters.log_tf:
     #        tf = (1 + math.log (tf))
 
-    term_accum[term] = (tf * df)
+
 
     # Sort the term rankings
     result = sorted (term_accum, key=term_accum.__getitem__, reverse=True)
@@ -161,10 +161,10 @@ def main():
     accum,titles = run_query(collection, clean_query(query))
     result = sorted (accum, key=accum.__getitem__, reverse=True)
 
-    # if not parameters.BRF:
-    for i in range (min (len (result), parameters.BRF_k)):
-        print ("{0:10.8f} {1:5} {2}".format (accum[result[i]], result[i], titles[result[i]]))
-        # return
+    if not parameters.BRF:
+        for i in range (min (len (result), parameters.BRF_k)):
+            print ("{0:10.8f} {1:5} {2}".format (accum[result[i]], result[i], titles[result[i]]))
+        return
 
     docIDs = []
     for i in range (min (len (result), parameters.BRF_k)):
@@ -172,10 +172,9 @@ def main():
     accum, titles = BRF(collection, docIDs, query)
     result = sorted (accum, key=accum.__getitem__, reverse=True)
 
-    # if parameters.BRF:
-    # print(" ")
-    for i in range (min (len (result), parameters.BRF_k)):
-        print ("{0:10.8f} {1:5} {2}".format (accum[result[i]], result[i], titles[result[i]]))
+    if parameters.BRF:
+        for i in range (min (len (result), parameters.BRF_k)):
+            print ("{0:10.8f} {1:5} {2}".format (accum[result[i]], result[i], titles[result[i]]))
 
 if __name__ == "__main__":
     main()
