@@ -100,37 +100,70 @@ def get_NDCG(collection, test_query, query_relevances):
         dprint("ideal_relevances:", ideal_relevances)
         return -1
 
-def main(collection):
-    queries = get_queries(collection)
-    relevances = get_relevances(collection)
+def main(collections):
+    map_before_sum = map_after_sum = 0.0
+    ndcg_before_sum = ndcg_after_sum = 0.0
+    for collection in collections:
+        queries = get_queries(collection)
+        relevances = get_relevances(collection)
 
-    parameters.BRF = False
-    map_before = get_MAP(collection, queries, relevances)
-    parameters.BRF = True
-    map_after = get_MAP(collection, queries, relevances)
+        parameters.BRF = False
+        map_before = get_MAP(collection, queries, relevances)
+        parameters.BRF = True
+        map_after = get_MAP(collection, queries, relevances)
 
-    print("_____ Mean average precision for", collection,"_____")
-    print("MAP before BRF:", map_before)
-    print("MAP after BRF:", map_after, "\n")
+        map_before_sum += map_before
+        map_after_sum += map_after
 
-    # Have to use a loop for NDCG calculations because NDCG is done per query
-    # not per set of queries like MAP
-    print("_____ NDCG for queries in", collection,"_____")
-    for i in range(len(queries)):
-        parameters.BRF=False
-        ndcg_before = get_NDCG(collection, queries[i], relevances[i])
-        parameters.BRF=True
-        ndcg_after = get_NDCG(collection, queries[i], relevances[i])
+        print("_____ Mean average precision for", collection,"_____")
+        print("MAP before BRF:", map_before)
+        print("MAP after BRF:", map_after, "\n")
 
-        print("query:", queries[i].strip())
-        print("NDCG before BRF:", ndcg_before)
-        print("NDCG after BRF:", ndcg_after, "\n")
+        # Have to use a loop for NDCG calculations because NDCG is done per query
+        # not per set of queries like MAP
+        ndcg_before_total = ndcg_after_total = 0.0
+        print("_____ NDCG for queries in", collection,"_____")
+        for i in range(len(queries)):
+            parameters.BRF=False
+            ndcg_before = get_NDCG(collection, queries[i], relevances[i])
+            parameters.BRF=True
+            ndcg_after = get_NDCG(collection, queries[i], relevances[i])
 
+            ndcg_before_total += ndcg_before
+            ndcg_after_total += ndcg_after
+
+            print("query:", queries[i].strip())
+            print("NDCG before BRF:", ndcg_before)
+            print("NDCG after BRF:", ndcg_after, "\n")
+
+        ndcg_before_sum += (ndcg_before_total / len(queries))
+        ndcg_after_sum += (ndcg_after_total / len(queries))
+
+    num_testbeds = len(collections)
+    avg_map_before = map_before_sum / num_testbeds
+    avg_map_after = map_after_sum / num_testbeds
+    avg_ndcg_before = ndcg_before_sum / num_testbeds
+    avg_ndcg_after = ndcg_after_sum / num_testbeds
+    print("\n\n_____ Summary _____")
+    print("Testbeds run:", num_testbeds)
+    print("-----")
+    print("Average MAP before BRF:", avg_map_before)
+    print("Average MAP after BRF:", avg_map_after)
+    print("-----")
+    print("Average NDCG before BRF:", avg_ndcg_before)
+    print("Average NDCG after BRF:", avg_ndcg_after)
+    print("-----")
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-       print ("Syntax: report.py <collection>")
-       exit(0)
+        print ("Syntax: report.py <collection>|<all>")
+        exit(0)
 
-    main(sys.argv[1])
+    if sys.argv[1] == "all":
+        #TODO: find a valid copy of testbed 10
+        collections = ["testbed" + str(i) for i in range(1, 17) if i != 10]
+    else:
+        collections = [sys.argv[1]]
+
+    main(collections)
