@@ -50,7 +50,7 @@ def get_MAP(collection, queries, relevances):
         precision_avg_sum = 0.0
         precision_total = 0.0
 
-        print("result", result)
+        dprint("result", result)
         for i in range(len(result)):
             result_count += 1
             relevance_of_result = relevances[query_idx][int(result[i]) - 1] / 2.0
@@ -105,33 +105,37 @@ def main(collections):
         relevances = get_relevances(collection)
 
         parameters.BRF = False
+        parameters.stop_words = False
         map_before = get_MAP(collection, queries, relevances)
         parameters.BRF = True
+        parameters.stop_words = True
         map_after = get_MAP(collection, queries, relevances)
 
         map_before_sum += map_before
         map_after_sum += map_after
 
         print("_____ Mean average precision for", collection,"_____")
-        print("MAP before BRF:", map_before)
-        print("MAP after BRF:", map_after, "\n")
+        print("MAP before:", map_before)
+        print("MAP after:", map_after, "\n")
 
         # Have to use a loop for NDCG calculations because NDCG is done per query
         # not per set of queries like MAP
         ndcg_before_total = ndcg_after_total = 0.0
         print("_____ NDCG for queries in", collection,"_____")
         for i in range(len(queries)):
-            parameters.BRF=False
+            parameters.BRF = False
+            parameters.stop_words = False
             ndcg_before = get_NDCG(collection, queries[i], relevances[i])
-            parameters.BRF=True
+            parameters.BRF = True
+            parameters.stop_words = True
             ndcg_after = get_NDCG(collection, queries[i], relevances[i])
 
             ndcg_before_total += ndcg_before
             ndcg_after_total += ndcg_after
 
             print("query:", queries[i].strip())
-            print("NDCG before BRF:", ndcg_before)
-            print("NDCG after BRF:", ndcg_after, "\n")
+            print("NDCG before:", ndcg_before)
+            print("NDCG after:", ndcg_after, "\n")
 
         ndcg_before_sum += (ndcg_before_total / len(queries))
         ndcg_after_sum += (ndcg_after_total / len(queries))
@@ -144,11 +148,11 @@ def main(collections):
     print("\n\n_____ Summary _____")
     print("Testbeds run:", num_testbeds)
     print("-----")
-    print("Average MAP before BRF:", avg_map_before)
-    print("Average MAP after BRF:", avg_map_after)
+    print("Average MAP before:", avg_map_before)
+    print("Average MAP after:", avg_map_after)
     print("-----")
-    print("Average NDCG before BRF:", avg_ndcg_before)
-    print("Average NDCG after BRF:", avg_ndcg_after)
+    print("Average NDCG before:", avg_ndcg_before)
+    print("Average NDCG after:", avg_ndcg_after)
     print("-----")
 
 if __name__ == "__main__":
