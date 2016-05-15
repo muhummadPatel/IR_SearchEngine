@@ -51,7 +51,7 @@ def get_MAP(collection, queries, relevances):
     avg_precision_sum = 0.0
     for query_idx, test_query in enumerate(queries):
         dprint("query for MAP:", test_query)
-        similarity, result, titles = query_tool.get_result(collection, test_query)
+        similarity, result, titles = query_tool.get_result(collection, test_query, clip_results=False)
 
         result_count = 0
         precision_sum = 0.0
@@ -75,7 +75,7 @@ def get_MAP(collection, queries, relevances):
 # because NDCG is calculated for a single query (whereas MAP is calculated for
 # a group of queries)
 def get_NDCG(collection, test_query, query_relevances):
-    similarity, result, titles = query_tool.get_result(collection, test_query)
+    similarity, result, titles = query_tool.get_result(collection, test_query, clip_results=False)
 
     actual_relevances = [query_relevances[int(r)-1] for r in result]
     ideal_relevances = sorted(actual_relevances, reverse=True)
