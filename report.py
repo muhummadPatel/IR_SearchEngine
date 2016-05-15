@@ -2,17 +2,10 @@ import math
 import os
 import sys
 
-import query as query_tool
 import parameters
+import query as query_tool
+from parameters import dprint
 
-# set verbose=True to enable debug printlines
-verbose = False
-
-
-def dprint(*args, end="\n"):
-    global verbose
-    if verbose:
-        print(args, end)
 
 def get_queries(collection):
     collection_filenames = os.listdir(collection)
@@ -23,7 +16,7 @@ def get_queries(collection):
     for query_file in query_filenames:
         query_filepath = os.path.join(collection, query_file)
         with open(query_filepath, "r") as q:
-            queries.append(q.readlines()[0])
+            queries.append(q.read().splitlines()[0])
     dprint("queries:", queries)
 
     return queries
@@ -38,7 +31,7 @@ def get_relevances(collection):
     for rel_file in relevance_filenames:
         rel_filepath = os.path.join(collection, rel_file)
         with open(rel_filepath, "r") as r:
-            int_rels = [int(i) for i in r.readlines()]
+            int_rels = [int(i) for i in r.read().splitlines()]
             relevances.append(int_rels)
     dprint("relevances:", relevances)
     dprint("# relevance judgements for query 1:", len(relevances[0]))
@@ -57,7 +50,7 @@ def get_MAP(collection, queries, relevances):
         precision_sum = 0.0
         for i in range(len(result)):
             result_count += 1
-            relevance_of_result = relevances[query_idx][int(result[i])-1] / 2.0
+            relevance_of_result = relevances[query_idx][int(result[i]) - 1] / 2.0
             precision_sum += relevance_of_result / result_count
 
             dprint("{0:10.8f} {1:5} {2}".format(similarity[result[i]], result[i], titles[result[i]]), end=" ")
@@ -77,7 +70,7 @@ def get_MAP(collection, queries, relevances):
 def get_NDCG(collection, test_query, query_relevances):
     similarity, result, titles = query_tool.get_result(collection, test_query, clip_results=False)
 
-    actual_relevances = [query_relevances[int(r)-1] for r in result]
+    actual_relevances = [query_relevances[int(r) - 1] for r in result]
     ideal_relevances = sorted(actual_relevances, reverse=True)
     dprint("actual_relevances:", actual_relevances)
     dprint("ideal_relevances:", ideal_relevances)
@@ -85,7 +78,6 @@ def get_NDCG(collection, test_query, query_relevances):
     disc_cum_gain = 0
     ideal_disc_cum_gain = 0
     for i in range(len(result)):
-
         # need to use i+2 because i starts at 0, not 1
         disc_cum_gain += (actual_relevances[i] / math.log(i + 2, 2))
         ideal_disc_cum_gain += (ideal_relevances[i] / math.log(i + 2, 2))
@@ -99,6 +91,7 @@ def get_NDCG(collection, test_query, query_relevances):
         dprint("actual_relevances:", actual_relevances)
         dprint("ideal_relevances:", ideal_relevances)
         return -1
+
 
 def main(collections):
     map_before_sum = map_after_sum = 0.0
@@ -153,7 +146,6 @@ def main(collections):
     print("Average NDCG before BRF:", avg_ndcg_before)
     print("Average NDCG after BRF:", avg_ndcg_after)
     print("-----")
-
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
