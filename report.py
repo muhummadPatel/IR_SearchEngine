@@ -39,12 +39,12 @@ def get_relevances(collection):
     return relevances
 
 
-def get_MAP(collection, queries, relevances):
+def get_MAP(collection, queries, relevances, clip_res=False):
     query_count = 0
     avg_precision_sum = 0.0
     for query_idx, test_query in enumerate(queries):
         dprint("query for MAP:", test_query)
-        similarity, result, titles = query_tool.get_result(collection, test_query, clip_results=False)
+        similarity, result, titles = query_tool.get_result(collection, test_query, clip_results=clip_res)
 
         result_count = 0
         precision_avg_sum = 0.0
@@ -71,8 +71,8 @@ def get_MAP(collection, queries, relevances):
 # Pass in a single query and the set of relevance judgements for that query
 # because NDCG is calculated for a single query (whereas MAP is calculated for
 # a group of queries)
-def get_NDCG(collection, test_query, query_relevances):
-    similarity, result, titles = query_tool.get_result(collection, test_query, clip_results=False)
+def get_NDCG(collection, test_query, query_relevances, clip_res=False):
+    similarity, result, titles = query_tool.get_result(collection, test_query, clip_results=clip_res)
 
     actual_relevances = [query_relevances[int(r) - 1] for r in result]
     ideal_relevances = sorted(actual_relevances, reverse=True)
@@ -96,8 +96,7 @@ def get_NDCG(collection, test_query, query_relevances):
         dprint("ideal_relevances:", ideal_relevances)
         return -1
 
-
-def main(collections):
+def get_stats(collections, clip_res=False):
     map_before_sum = map_after_sum = 0.0
     ndcg_before_sum = ndcg_after_sum = 0.0
     for collection in collections:
@@ -106,10 +105,10 @@ def main(collections):
 
         parameters.BRF = False
         parameters.stop_words = False
-        map_before = get_MAP(collection, queries, relevances)
+        map_before = get_MAP(collection, queries, relevances, clip_res)
         parameters.BRF = True
         parameters.stop_words = True
-        map_after = get_MAP(collection, queries, relevances)
+        map_after = get_MAP(collection, queries, relevances, clip_res)
 
         map_before_sum += map_before
         map_after_sum += map_after
@@ -125,10 +124,10 @@ def main(collections):
         for i in range(len(queries)):
             parameters.BRF = False
             parameters.stop_words = False
-            ndcg_before = get_NDCG(collection, queries[i], relevances[i])
+            ndcg_before = get_NDCG(collection, queries[i], relevances[i], clip_res)
             parameters.BRF = True
             parameters.stop_words = True
-            ndcg_after = get_NDCG(collection, queries[i], relevances[i])
+            ndcg_after = get_NDCG(collection, queries[i], relevances[i], clip_res)
 
             ndcg_before_total += ndcg_before
             ndcg_after_total += ndcg_after
@@ -145,19 +144,44 @@ def main(collections):
     avg_map_after = map_after_sum / num_testbeds
     avg_ndcg_before = ndcg_before_sum / num_testbeds
     avg_ndcg_after = ndcg_after_sum / num_testbeds
+
+    return {
+        "num_testbeds": num_testbeds,
+        "avg_map_before": avg_map_before,
+        "avg_map_after": avg_map_after,
+        "avg_ndcg_before": avg_ndcg_before,
+        "avg_ndcg_after": avg_ndcg_after
+    }
+
+
+def main(collections):
+
+    stats10 = get_stats(collections, clip_res=True)
+    stats200 = get_stats(collections, clip_res=False)
+
     print("\n\n_____ Summary _____")
-    print("Testbeds run:", num_testbeds)
+    print("Testbeds run:", stats10["num_testbeds"])
+    print("=====\n")
+    print("Using 10 results:")
     print("-----")
-    print("Average MAP before:", avg_map_before)
-    print("Average MAP after:", avg_map_after)
+    print("Average MAP before:", stats10["avg_map_before"])
+    print("Average MAP after:", stats10["avg_map_after"])
     print("-----")
-    print("Average NDCG before:", avg_ndcg_before)
-    print("Average NDCG after:", avg_ndcg_after)
+    print("Average NDCG before:", stats10["avg_ndcg_before"])
+    print("Average NDCG after:", stats10["avg_ndcg_after"])
+    print("=====\n")
+    print("Using 200 results:")
     print("-----")
+    print("Average MAP before:", stats200["avg_map_before"])
+    print("Average MAP after:", stats200["avg_map_after"])
+    print("-----")
+    print("Average NDCG before:", stats200["avg_ndcg_before"])
+    print("Average NDCG after:", stats200["avg_ndcg_after"])
+    print("=====")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print ("Syntax: report.py <collection>|<all>")
+        print("Syntax: report.py <collection>|<all>")
         exit(0)
 
     if sys.argv[1] == "all":
