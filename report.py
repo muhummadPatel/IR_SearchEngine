@@ -47,18 +47,22 @@ def get_MAP(collection, queries, relevances):
         similarity, result, titles = query_tool.get_result(collection, test_query, clip_results=False)
 
         result_count = 0
-        precision_sum = 0.0
+        precision_avg_sum = 0.0
+        precision_total = 0.0
+
+        print("result", result)
         for i in range(len(result)):
             result_count += 1
             relevance_of_result = relevances[query_idx][int(result[i]) - 1] / 2.0
-            precision_sum += relevance_of_result / result_count
+            precision_total += relevance_of_result
+            precision_avg_sum += precision_total / result_count
 
             dprint("{0:10.8f} {1:5} {2}".format(similarity[result[i]], result[i], titles[result[i]]), end=" ")
             dprint(relevance_of_result)
-        dprint()
 
         query_count += 1
-        avg_precision_sum += precision_sum / query_count
+        avg_precision_sum += precision_avg_sum / result_count
+        dprint("avg precision_sum for query", precision_avg_sum / result_count)
 
     dprint("~> Mean Average Precision:", avg_precision_sum / query_count)
     return avg_precision_sum / query_count
