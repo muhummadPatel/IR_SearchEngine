@@ -170,7 +170,7 @@ def get_result(collection, query, clip_results=True):
     result = sorted(accum, key=accum.__getitem__, reverse=True)
 
     if parameters.BRF:
-        final_result = result[0:min (len (result), parameters.BRF_k)] if clip_results else result
+        final_result = result[0:min (len (result), 10)] if clip_results else result
         return accum, final_result, titles
 
 def main():
