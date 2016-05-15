@@ -146,14 +146,15 @@ def BRF(collection, doc_ids, query, stop_words):
     accum, titles = run_query(collection, query_words)
     return accum, titles
 
-
-def get_result(collection, query):
+# set clip_results to False to return the full list of docs with associated vars
+def get_result(collection, query, clip_results=True):
     # print top k results if BRF not enabled
     accum, titles = run_query(collection, clean_query(query))
-    result = sorted(accum, key=accum.__getitem__, reverse=True)
+    result = sorted (accum, key=accum.__getitem__, reverse=True)
 
     if not parameters.BRF:
-        return accum, result[0:min(len(result), 10)], titles
+        final_result = result[0:min (len (result), 10)] if clip_results else result
+        return accum, final_result, titles
 
     doc_ids = []
     for i in range(min(len(result), parameters.BRF_k)):
@@ -169,8 +170,8 @@ def get_result(collection, query):
     result = sorted(accum, key=accum.__getitem__, reverse=True)
 
     if parameters.BRF:
-        return accum, result[0:min(len(result), parameters.BRF_k)], titles
-
+        final_result = result[0:min (len (result), parameters.BRF_k)] if clip_results else result
+        return accum, final_result, titles
 
 def main():
     # check parameter for collection name
