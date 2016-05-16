@@ -13,6 +13,7 @@ log_idf = True
 BRF = True
 BRF_k = 1
 BRF_tK = 3
+BRF_explore_params = False
 
 
 # Utility functions

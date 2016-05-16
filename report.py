@@ -158,8 +158,7 @@ def get_stats(collections, k, tk, clip_res=False):
     }
 
 
-def main(collections):
-    print("inside main")
+def explore_params(collections):
     stats10 = {}
     stats200 = {}
     highest_k = -1
@@ -179,8 +178,25 @@ def main(collections):
                 stats10 = copy.deepcopy(stats10_temp)
                 stats200 = copy.deepcopy(stats200_temp)
 
+    print("Best params identified:")
+    print("highest k =", highest_k, ", highest tk=", highest_tk)
+
+    return stats10, stats200
+
+
+def main(collections):
+    stats10 = {}
+    stats200 = {}
+
+    if parameters.BRF_explore_params:
+        stats10, stats200 = explore_params(collections)
+    else:
+        k = parameters.BRF_k
+        tk = parameters.BRF_tK
+        stats10 = get_stats(collections, k, tk, clip_res=True)
+        stats200 = get_stats(collections, k, tk, clip_res=False)
+
     print("\n_____ Summary _____")
-    print("k =", highest_k, "tk=", highest_tk)
     print("Testbeds run:", stats10["num_testbeds"])
     print("=====")
     print("Using 10 results:")
