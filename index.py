@@ -77,10 +77,15 @@ try:
 except:
     pass
 for key, value in index.items():
-    f = open(collection + "_index/" + key, "w")
-    for entry, entry_value in value.items():
-        print(entry, entry_value, sep=':', file=f)
-    f.close()
+    try:
+        f = open(collection + "_index/_" + key, "w")
+        for entry, entry_value in value.items():
+            print(entry, entry_value, sep=':', file=f)
+        f.close()
+    except FileNotFoundError:
+        print("_"+key+" couldn't be opened - ignoring")
+
+
 
 # write brf index to files
 try:

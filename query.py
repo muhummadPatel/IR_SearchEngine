@@ -31,7 +31,7 @@ def run_query(collection, query_words):
     # get document lengths/titles
     titles = {}
     f = open(collection + "_index_len", "r")
-    lengths = f.readlines()
+    lengths = f.read().splitlines()
     f.close()
 
     # get N
@@ -42,10 +42,10 @@ def run_query(collection, query_words):
         if term != '':
             if parameters.stemming:
                 term = p.stem(term, 0, len(term) - 1)
-            if not os.path.isfile(collection + "_index/" + term):
+            if not os.path.isfile(collection + "_index/_" + term):
                 continue
-            f = open(collection + "_index/" + term, "r")
-            lines = f.readlines()
+            f = open(collection + "_index/_" + term, "r")
+            lines = f.read().splitlines()
             idf = 1
             if parameters.use_idf:
                 df = len(lines)
