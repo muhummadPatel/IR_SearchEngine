@@ -1,3 +1,4 @@
+import copy
 import math
 import os
 import sys
@@ -96,7 +97,10 @@ def get_NDCG(collection, test_query, query_relevances, clip_res=False):
         dprint("ideal_relevances:", ideal_relevances)
         return -1
 
-def get_stats(collections, clip_res=False):
+def get_stats(collections, k, tk, clip_res=False):
+    parameters.BRF_k = k
+    parameters.BRF_tK = tk
+
     map_before_sum = map_after_sum = 0.0
     ndcg_before_sum = ndcg_after_sum = 0.0
     for collection in collections:
@@ -113,14 +117,14 @@ def get_stats(collections, clip_res=False):
         map_before_sum += map_before
         map_after_sum += map_after
 
-        print("_____ Mean average precision for", collection,"_____")
-        print("MAP before:", map_before)
-        print("MAP after:", map_after, "\n")
+        dprint("_____ Mean average precision for", collection,"_____")
+        dprint("MAP before:", map_before)
+        dprint("MAP after:", map_after, "\n")
 
         # Have to use a loop for NDCG calculations because NDCG is done per query
         # not per set of queries like MAP
         ndcg_before_total = ndcg_after_total = 0.0
-        print("_____ NDCG for queries in", collection,"_____")
+        dprint("_____ NDCG for queries in", collection,"_____")
         for i in range(len(queries)):
             parameters.BRF = False
             parameters.stop_words = False
@@ -132,9 +136,9 @@ def get_stats(collections, clip_res=False):
             ndcg_before_total += ndcg_before
             ndcg_after_total += ndcg_after
 
-            print("query:", queries[i].strip())
-            print("NDCG before:", ndcg_before)
-            print("NDCG after:", ndcg_after, "\n")
+            dprint("query:", queries[i].strip())
+            dprint("NDCG before:", ndcg_before)
+            dprint("NDCG after:", ndcg_after, "\n")
 
         ndcg_before_sum += (ndcg_before_total / len(queries))
         ndcg_after_sum += (ndcg_after_total / len(queries))
@@ -155,13 +159,30 @@ def get_stats(collections, clip_res=False):
 
 
 def main(collections):
+    print("inside main")
+    stats10 = {}
+    stats200 = {}
+    highest_k = -1
+    highest_tk = -1
+    highest_map = -1
+    for k in range(1, 21):
+        print("k", k)
+        for tk in range(3, 26):
+            stats10_temp = get_stats(collections, k, tk, clip_res=True)
+            stats200_temp = get_stats(collections, k, tk, clip_res=False)
 
-    stats10 = get_stats(collections, clip_res=True)
-    stats200 = get_stats(collections, clip_res=False)
+            if stats10_temp["avg_map_after"] > highest_map:
+                highest_k = k
+                highest_tk = tk
+                highest_map = stats10_temp["avg_map_after"]
 
-    print("\n\n_____ Summary _____")
+                stats10 = copy.deepcopy(stats10_temp)
+                stats200 = copy.deepcopy(stats200_temp)
+
+    print("\n_____ Summary _____")
+    print("k =", highest_k, "tk=", highest_tk)
     print("Testbeds run:", stats10["num_testbeds"])
-    print("=====\n")
+    print("=====")
     print("Using 10 results:")
     print("-----")
     print("Average MAP before:", stats10["avg_map_before"])
@@ -169,7 +190,7 @@ def main(collections):
     print("-----")
     print("Average NDCG before:", stats10["avg_ndcg_before"])
     print("Average NDCG after:", stats10["avg_ndcg_after"])
-    print("=====\n")
+    print("=====")
     print("Using 200 results:")
     print("-----")
     print("Average MAP before:", stats200["avg_map_before"])
