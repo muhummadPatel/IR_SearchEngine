@@ -131,7 +131,7 @@ def BRF(collection, doc_ids, query, stop_words):
     # Expand the query - add the tK most popular words from the initial set
 
     i = 0
-    while len(query_words) < parameters.BRF_tK:
+    while len(query_words) < parameters.BRF_tK and i < len(result):
         if result[i] not in stop_words and result[i] not in query_words:
             query_words.append(result[i])
         i += 1
