@@ -130,7 +130,7 @@ def get_stats(collections, k, tk, clip_res=False):
             parameters.stop_words = False
             ndcg_before = get_NDCG(collection, queries[i], relevances[i], clip_res)
             parameters.BRF = True
-            parameters.stop_words = True
+            parameters.stop_words = False
             ndcg_after = get_NDCG(collection, queries[i], relevances[i], clip_res)
 
             ndcg_before_total += ndcg_before
@@ -197,6 +197,14 @@ def main(collections):
         stats200 = get_stats(collections, k, tk, clip_res=False)
 
     print("\n_____ Summary _____")
+    print("Normalisation: " + str(parameters.normalization))
+    print("stemming: " + str(parameters.stemming))
+    print("case_folding: " + str(parameters.case_folding))
+    print("stop_words: " + str(parameters.stop_words))
+    print("log_tf: " + str(parameters.log_tf))
+    print("use_idf: " + str(parameters.use_idf))
+    print("log_idf: " + str(parameters.log_idf))
+    print("BRF: " + str(parameters.BRF) + "\n")
     print("Testbeds run:", stats10["num_testbeds"])
     print("=====")
     print("Using 10 results:")

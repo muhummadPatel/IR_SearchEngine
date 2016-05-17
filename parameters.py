@@ -4,16 +4,16 @@
 
 debug_print = False
 normalization = True
-stemming = True
+stemming = False
 case_folding = True
 stop_words = True
-log_tf = True
+log_tf = False
 use_idf = True
-log_idf = True
+log_idf = False
 BRF = True
-BRF_k = 1
-BRF_tK = 3
-BRF_explore_params = False
+BRF_k = 6
+BRF_tK = 9
+BRF_explore_params = True
 
 
 # Utility functions

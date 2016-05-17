@@ -13,13 +13,20 @@ import porter
 from parameters import dprint
 
 
-def clean_query(query):
+def clean_query(query, stop_words):
     # clean query
     if parameters.case_folding:
         query = query.lower()
     query = re.sub(r'[^ a-zA-Z0-9]', ' ', query)
     query = re.sub(r'\s+', ' ', query)
     query_words = query.split(' ')
+
+    p = porter.PorterStemmer()
+    if parameters.stop_words:
+        query_words = [query_word for query_word in query_words if query_word not in stop_words]
+    if parameters.stemming:
+        query_words = [p.stem(query_word, 0, len(query_word) - 1) for query_word in query_words]
+
     return query_words
 
 
@@ -88,7 +95,7 @@ def BRF(collection, doc_ids, query, stop_words):
     itfs = {}  # Term frequencies for the BRF most popular terms
     term_accum = {}  # Overall ranking of each term
 
-    query_words = clean_query(query)
+    query_words = clean_query(query, stop_words)
     filenames = glob.glob(collection + "_brf_index" + "/word_count.*")  # Get list of filenames
     for f in filenames:
         doc_no = f[f.find(".") + 1:]
@@ -131,9 +138,10 @@ def BRF(collection, doc_ids, query, stop_words):
     # Expand the query - add the tK most popular words from the initial set
 
     i = 0
+    p = porter.PorterStemmer()
     while len(query_words) < parameters.BRF_tK and i < len(result):
         if result[i] not in stop_words and result[i] not in query_words:
-            query_words.append(result[i])
+            query_words.append(p.stem(result[i], 0, len(result[i]) - 1))
         i += 1
 
     dprint("Expanded query words: ")
@@ -146,10 +154,17 @@ def BRF(collection, doc_ids, query, stop_words):
     accum, titles = run_query(collection, query_words)
     return accum, titles
 
+
 # set clip_results to False to return the full list of docs with associated vars
 def get_result(collection, query, clip_results=True):
+    # Stop words is an empty set unless parameter is set
+    stop_words = set()
+    if parameters.stop_words:
+        stop_words_file = open("stop-word-list.txt", "r")
+        stop_words = set(stop_words_file.read().splitlines())
+
     # print top k results if BRF not enabled
-    accum, titles = run_query(collection, clean_query(query))
+    accum, titles = run_query(collection, clean_query(query, stop_words))
     result = sorted (accum, key=accum.__getitem__, reverse=True)
 
     if not parameters.BRF:
@@ -159,12 +174,6 @@ def get_result(collection, query, clip_results=True):
     doc_ids = []
     for i in range(min(len(result), parameters.BRF_k)):
         doc_ids.append(result[i])  # Store the doc ids of the top k documents
-
-    # Stop words is an empty set unless parameter is set
-    stop_words = set()
-    if parameters.stop_words:
-        stop_words_file = open("stop-word-list.txt", "r")
-        stop_words = set(stop_words_file.read().splitlines())
 
     accum, titles = BRF(collection, doc_ids, query, stop_words)
     result = sorted(accum, key=accum.__getitem__, reverse=True)
