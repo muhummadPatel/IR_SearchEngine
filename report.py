@@ -122,6 +122,7 @@ def get_stats(collections, k, tk, clip_res=False):
 
         ndcg_original_sum += (ndcg_original_total / len(queries))
 
+        dprint("Starting BRF Only")
         parameters.BRF_only()
         BRF_only = get_MAP(collection, queries, relevances, clip_res)
 
@@ -137,6 +138,7 @@ def get_stats(collections, k, tk, clip_res=False):
 
         ndcg_brf_only_sum += (ndcg_brf_only_total / len(queries))
 
+        dprint("Starting BRF Optimised")
         parameters.BRF_optimised(collection)
         BRF_optimised = get_MAP(collection, queries, relevances, clip_res)
 
@@ -206,17 +208,18 @@ def explore_params(collections):
     stats200 = {}
     highest_k = -1
     highest_tk = -1
-    highest_map = -1
+    max_val = -1
     for k in range(1, 21):
         print("k", k)
-        for tk in range(3, 26):
+        for tk in range(1, 26):
             stats10_temp = get_stats(collections, k, tk, clip_res=True)
             stats200_temp = get_stats(collections, k, tk, clip_res=False)
 
-            if stats10_temp["avg_map_after"] > highest_map:
+            improvement = (stats10_temp["avg_map_brf_optimised"] + stats10_temp["avg_ndcg_brf_optimised"])
+            if  improvement > max_val:
                 highest_k = k
                 highest_tk = tk
-                highest_map = stats10_temp["avg_map_after"]
+                max_val = (stats10_temp["avg_map_brf_optimised"] + stats10_temp["avg_ndcg_brf_optimised"])
 
                 stats10 = copy.deepcopy(stats10_temp)
                 stats200 = copy.deepcopy(stats200_temp)
@@ -244,26 +247,26 @@ def main(collections):
     print("=====")
     print("Using 10 results:")
     print("-----")
-    print("avg_map_original:", stats10["avg_map_before"])
-    print("avg_map_brf_only:", stats10["avg_map_after"])
-    print("avg_map_brf_optimised:", stats10["avg_map_before"])
+    print("avg_map_original:", stats10["avg_map_original"])
+    print("avg_map_brf_only:", stats10["avg_map_brf_only"])
+    print("avg_map_brf_optimised:", stats10["avg_map_brf_optimised"])
     #print("avg_map_overall_optimised:", stats10["avg_map_after"])
     print("-----")
-    print("avg_ndcg_original:", stats10["avg_ndcg_before"])
-    print("avg_ndcg_brf_only:", stats10["avg_ndcg_after"])
-    print("avg_ndcg_brf_optimised:", stats10["avg_ndcg_before"])
+    print("avg_ndcg_original:", stats10["avg_ndcg_original"])
+    print("avg_ndcg_brf_only:", stats10["avg_ndcg_brf_only"])
+    print("avg_ndcg_brf_optimised:", stats10["avg_ndcg_brf_optimised"])
     #print("avg_ndcg_overall_optimised:", stats10["avg_ndcg_after"])
     print("=====")
     print("Using 200 results:")
     print("-----")
-    print("avg_map_original:", stats200["avg_map_before"])
-    print("avg_map_brf_only:", stats200["avg_map_after"])
-    print("avg_map_brf_optimised:", stats200["avg_map_before"])
+    print("avg_map_original:", stats200["avg_map_original"])
+    print("avg_map_brf_only:", stats200["avg_map_brf_only"])
+    print("avg_map_brf_optimised:", stats200["avg_map_brf_optimised"])
     #print("avg_map_overall_optimised:", stats200["avg_map_after"])
     print("-----")
-    print("avg_ndcg_original:", stats200["avg_ndcg_before"])
-    print("avg_ndcg_brf_only:", stats200["avg_ndcg_after"])
-    print("avg_ndcg_brf_optimised:", stats200["avg_ndcg_before"])
+    print("avg_ndcg_original:", stats200["avg_ndcg_original"])
+    print("avg_ndcg_brf_only:", stats200["avg_ndcg_brf_only"])
+    print("avg_ndcg_brf_optimised:", stats200["avg_ndcg_brf_optimised"])
     #print("avg_ndcg_overall_optimised:", stats200["avg_ndcg_after"])
     print("=====")
 

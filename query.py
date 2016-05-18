@@ -138,11 +138,13 @@ def BRF(collection, doc_ids, query, stop_words):
     # Expand the query - add the tK most popular words from the initial set
 
     i = 0
+    g = 0
     p = porter.PorterStemmer()
-    while i < parameters.BRF_tK and i < len(result):
-        if result[i] not in stop_words and result[i] not in query_words:
-            query_words.append(p.stem(result[i], 0, len(result[i]) - 1))
+    while i < parameters.BRF_tK and g < len(result):
+        if result[g] not in stop_words and result[g] not in query_words:
+            query_words.append(p.stem(result[g], 0, len(result[g]) - 1))
             i += 1
+        g += 1
 
 
     dprint("Expanded query words: ")
