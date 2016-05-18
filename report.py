@@ -101,60 +101,105 @@ def get_stats(collections, k, tk, clip_res=False):
     parameters.BRF_k = k
     parameters.BRF_tK = tk
 
-    map_before_sum = map_after_sum = 0.0
-    ndcg_before_sum = ndcg_after_sum = 0.0
+    map_original_sum = map_BRF_only_sum = map_BRF_optimised_sum = map_overall_optimised_sum = 0.0
+    ndcg_original_sum = ndcg_brf_only_sum = ndcg_brf_optimised_sum = ndcg_overall_optimised_sum = 0.0
     for collection in collections:
         queries = get_queries(collection)
         relevances = get_relevances(collection)
 
-        parameters.BRF = False
-        parameters.stop_words = False
-        map_before = get_MAP(collection, queries, relevances, clip_res)
-        parameters.BRF = True
-        parameters.stop_words = True
-        map_after = get_MAP(collection, queries, relevances, clip_res)
+        parameters.original_as_received(collection)
+        original = get_MAP(collection, queries, relevances, clip_res)
 
-        map_before_sum += map_before
-        map_after_sum += map_after
-
-        dprint("_____ Mean average precision for", collection,"_____")
-        dprint("MAP before:", map_before)
-        dprint("MAP after:", map_after, "\n")
-
-        # Have to use a loop for NDCG calculations because NDCG is done per query
-        # not per set of queries like MAP
-        ndcg_before_total = ndcg_after_total = 0.0
+        ndcg_original_total = 0.0
         dprint("_____ NDCG for queries in", collection,"_____")
         for i in range(len(queries)):
-            parameters.BRF = False
-            parameters.stop_words = False
-            ndcg_before = get_NDCG(collection, queries[i], relevances[i], clip_res)
-            parameters.BRF = True
-            parameters.stop_words = False
-            ndcg_after = get_NDCG(collection, queries[i], relevances[i], clip_res)
+            ndcg_original = get_NDCG(collection, queries[i], relevances[i], clip_res)
 
-            ndcg_before_total += ndcg_before
-            ndcg_after_total += ndcg_after
+            ndcg_original_total += ndcg_original
 
             dprint("query:", queries[i].strip())
-            dprint("NDCG before:", ndcg_before)
-            dprint("NDCG after:", ndcg_after, "\n")
+            dprint("NDCG original:", ndcg_original)
 
-        ndcg_before_sum += (ndcg_before_total / len(queries))
-        ndcg_after_sum += (ndcg_after_total / len(queries))
+        ndcg_original_sum += (ndcg_original_total / len(queries))
+
+        parameters.BRF_only()
+        BRF_only = get_MAP(collection, queries, relevances, clip_res)
+
+        ndcg_brf_only_total = 0.0
+        dprint("_____ NDCG for queries in", collection,"_____")
+        for i in range(len(queries)):
+            ndcg_brf_only = get_NDCG(collection, queries[i], relevances[i], clip_res)
+
+            ndcg_brf_only_total += ndcg_brf_only
+
+            dprint("query:", queries[i].strip())
+            dprint("NDCG brf_only:", ndcg_brf_only)
+
+        ndcg_brf_only_sum += (ndcg_brf_only_total / len(queries))
+
+        parameters.BRF_optimised(collection)
+        BRF_optimised = get_MAP(collection, queries, relevances, clip_res)
+
+        ndcg_brf_optimised_total = 0.0
+        dprint("_____ NDCG for queries in", collection,"_____")
+        for i in range(len(queries)):
+            ndcg_brf_optimised = get_NDCG(collection, queries[i], relevances[i], clip_res)
+
+            ndcg_brf_optimised_total += ndcg_brf_optimised
+
+            dprint("query:", queries[i].strip())
+            dprint("NDCG brf_optimised:", ndcg_brf_optimised)
+
+        ndcg_brf_optimised_sum += (ndcg_brf_optimised_total / len(queries))
+
+        parameters.overall_optimised()
+        overall_optimised = get_MAP(collection, queries, relevances, clip_res)
+
+        ndcg_overall_optimised_total = 0.0
+        dprint("_____ NDCG for queries in", collection,"_____")
+        for i in range(len(queries)):
+            ndcg_overall_optimised = get_NDCG(collection, queries[i], relevances[i], clip_res)
+
+            ndcg_overall_optimised_total += ndcg_overall_optimised
+
+            dprint("query:", queries[i].strip())
+            dprint("NDCG overall optimised:", ndcg_overall_optimised)
+
+        ndcg_overall_optimised_total += (ndcg_overall_optimised_total / len(queries))
+
+        map_original_sum += original
+        map_BRF_only_sum += BRF_only
+        map_BRF_optimised_sum += BRF_optimised
+        map_overall_optimised_sum += overall_optimised
+
+        dprint("_____ Mean average precision for", collection,"_____")
+        dprint("MAP original:", original)
+        dprint("MAP BRF only:", BRF_only, "\n")
+        dprint("MAP BRF optimised:", BRF_optimised)
+        dprint("MAP global optimised:", overall_optimised, "\n")
+
 
     num_testbeds = len(collections)
-    avg_map_before = map_before_sum / num_testbeds
-    avg_map_after = map_after_sum / num_testbeds
-    avg_ndcg_before = ndcg_before_sum / num_testbeds
-    avg_ndcg_after = ndcg_after_sum / num_testbeds
+    avg_map_original = map_original_sum / num_testbeds
+    avg_map_brf_only = map_BRF_only_sum / num_testbeds
+    avg_map_brf_optimised = map_BRF_optimised_sum / num_testbeds
+    avg_map_overall_optimised = map_BRF_optimised_sum / num_testbeds
+
+    avg_ndcg_original = ndcg_original_sum / num_testbeds
+    avg_ndcg_brf_only = ndcg_brf_only_sum / num_testbeds
+    avg_ndcg_brf_optimised = ndcg_brf_optimised_sum / num_testbeds
+    avg_ndcg_overall_optimised = ndcg_overall_optimised_sum / num_testbeds
 
     return {
         "num_testbeds": num_testbeds,
-        "avg_map_before": avg_map_before,
-        "avg_map_after": avg_map_after,
-        "avg_ndcg_before": avg_ndcg_before,
-        "avg_ndcg_after": avg_ndcg_after
+        "avg_map_original": avg_map_original,
+        "avg_map_brf_only": avg_map_brf_only,
+        "avg_map_brf_optimised": avg_map_brf_optimised,
+        "avg_map_overall_optimised": avg_map_overall_optimised,
+        "avg_ndcg_original": avg_ndcg_original,
+        "avg_ndcg_brf_only": avg_ndcg_brf_only,
+        "avg_ndcg_brf_optimised": avg_ndcg_brf_optimised,
+        "avg_ndcg_overall_optimised": avg_ndcg_overall_optimised
     }
 
 
@@ -197,31 +242,31 @@ def main(collections):
         stats200 = get_stats(collections, k, tk, clip_res=False)
 
     print("\n_____ Summary _____")
-    print("Normalisation: " + str(parameters.normalization))
-    print("stemming: " + str(parameters.stemming))
-    print("case_folding: " + str(parameters.case_folding))
-    print("stop_words: " + str(parameters.stop_words))
-    print("log_tf: " + str(parameters.log_tf))
-    print("use_idf: " + str(parameters.use_idf))
-    print("log_idf: " + str(parameters.log_idf))
-    print("BRF: " + str(parameters.BRF) + "\n")
     print("Testbeds run:", stats10["num_testbeds"])
     print("=====")
     print("Using 10 results:")
     print("-----")
-    print("Average MAP before:", stats10["avg_map_before"])
-    print("Average MAP after:", stats10["avg_map_after"])
+    print("avg_map_original:", stats10["avg_map_before"])
+    print("avg_map_brf_only:", stats10["avg_map_after"])
+    print("avg_map_brf_optimised:", stats10["avg_map_before"])
+    print("avg_map_overall_optimised:", stats10["avg_map_after"])
     print("-----")
-    print("Average NDCG before:", stats10["avg_ndcg_before"])
-    print("Average NDCG after:", stats10["avg_ndcg_after"])
+    print("avg_ndcg_original:", stats10["avg_ndcg_before"])
+    print("avg_ndcg_brf_only:", stats10["avg_ndcg_after"])
+    print("avg_ndcg_brf_optimised:", stats10["avg_ndcg_before"])
+    print("avg_ndcg_overall_optimised:", stats10["avg_ndcg_after"])
     print("=====")
     print("Using 200 results:")
     print("-----")
-    print("Average MAP before:", stats200["avg_map_before"])
-    print("Average MAP after:", stats200["avg_map_after"])
+    print("avg_map_original:", stats200["avg_map_before"])
+    print("avg_map_brf_only:", stats200["avg_map_after"])
+    print("avg_map_brf_optimised:", stats200["avg_map_before"])
+    print("avg_map_overall_optimised:", stats200["avg_map_after"])
     print("-----")
-    print("Average NDCG before:", stats200["avg_ndcg_before"])
-    print("Average NDCG after:", stats200["avg_ndcg_after"])
+    print("avg_ndcg_original:", stats200["avg_ndcg_before"])
+    print("avg_ndcg_brf_only:", stats200["avg_ndcg_after"])
+    print("avg_ndcg_brf_optimised:", stats200["avg_ndcg_before"])
+    print("avg_ndcg_overall_optimised:", stats200["avg_ndcg_after"])
     print("=====")
 
 if __name__ == "__main__":

@@ -8,9 +8,16 @@ def clean():
 
 def index_all():
     for i in range(1, 17):
-        print("python3 index.py testbed" + str(i))
-        os.system("python3 index.py testbed" + str(i))
+        if i != 10:
+            print("python3 index.py testbed" + str(i))
+            os.system("python3 index.py testbed" + str(i))
 
 
-clean()
-index_all()
+def clean_and_index(i):
+    os.system("rm -rf " + str(i) + "_*")
+    os.system("python3 index.py " + str(i))
+
+
+if __name__ == "__main__":
+    clean()
+    index_all()

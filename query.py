@@ -139,10 +139,11 @@ def BRF(collection, doc_ids, query, stop_words):
 
     i = 0
     p = porter.PorterStemmer()
-    while len(query_words) < parameters.BRF_tK and i < len(result):
+    while i < parameters.BRF_tK and i < len(result):
         if result[i] not in stop_words and result[i] not in query_words:
             query_words.append(p.stem(result[i], 0, len(result[i]) - 1))
-        i += 1
+            i += 1
+
 
     dprint("Expanded query words: ")
     dprint(query_words)
