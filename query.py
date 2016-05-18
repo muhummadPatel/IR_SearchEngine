@@ -47,11 +47,16 @@ def run_query(collection, query_words):
     # get index for each term and calculate similarities using accumulators
     for term in query_words:
         if term != '':
+            f = None
             if parameters.stemming:
                 term = p.stem(term, 0, len(term) - 1)
-            if not os.path.isfile(collection + "_index/_" + term):
-                continue
-            f = open(collection + "_index/_" + term, "r")
+                if not os.path.isfile(collection + "_stemmed_index/_" + term):
+                    continue
+                f = open(collection + "_stemmed_index/_" + term, "r")
+            else:
+                if not os.path.isfile(collection + "_index/_" + term):
+                    continue
+                f = open(collection + "_index/_" + term, "r")
             lines = f.read().splitlines()
             idf = 1
             if parameters.use_idf:
@@ -96,7 +101,11 @@ def BRF(collection, doc_ids, query, stop_words):
     term_accum = {}  # Overall ranking of each term
 
     query_words = clean_query(query, stop_words)
-    filenames = glob.glob(collection + "_brf_index" + "/word_count.*")  # Get list of filenames
+    filenames = None
+    if parameters.stemming:
+        filenames = glob.glob(collection + "_stemmed_brf_index" + "/word_count.*")  # Get list of filenames
+    else:
+        filenames = glob.glob(collection + "_brf_index" + "/word_count.*")  # Get list of filenames
     for f in filenames:
         doc_no = f[f.find(".") + 1:]
         if doc_no in doc_ids:

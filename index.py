@@ -38,6 +38,8 @@ g = open(collection + "_index_len", "w")
 # create inverted files in memory and save titles/N to file
 index = {}
 brf_index = {}
+stemmed_index = {}
+stemmed_index_brf_index = {}
 N = len(data.keys())
 p = porter.PorterStemmer()
 for key in data:
@@ -47,11 +49,12 @@ for key in data:
     doc_length = 0
     for word in words:
         if word != '':
-            if parameters.stemming:
-                word = p.stem(word, 0, len(word) - 1)
+            stemmed_word = p.stem(word, 0, len(word) - 1)
             doc_length += 1
             if parameters.case_folding:
                 word = word.lower()
+                stemmed_word = word
+            # Non stemmed index
             if word not in index:
                 index[word] = {key: 1}
             else:
@@ -66,6 +69,22 @@ for key in data:
                     brf_index[key][word] = 1
                 else:
                     brf_index[key][word] += 1
+
+            # Stemmed index
+            if stemmed_word not in stemmed_index:
+                stemmed_index[stemmed_word] = {key: 1}
+            else:
+                if key not in stemmed_index[stemmed_word]:
+                    stemmed_index[stemmed_word][key] = 1
+                else:
+                    stemmed_index[stemmed_word][key] += 1
+            if key not in stemmed_index_brf_index:
+                stemmed_index_brf_index[key] = {stemmed_word: 1}
+            else:
+                if stemmed_word not in stemmed_index_brf_index[key]:
+                    stemmed_index_brf_index[key][stemmed_word] = 1
+                else:
+                    stemmed_index_brf_index[key][stemmed_word] += 1
     print(key, doc_length, titles[key], sep=':', file=g)
 
 # document length/title file
@@ -74,6 +93,7 @@ g.close()
 # write inverted index to files
 try:
     os.mkdir(collection + "_index")
+    os.mkdir(collection + "_stemmed_index")
 except:
     pass
 for key, value in index.items():
@@ -82,6 +102,20 @@ for key, value in index.items():
         for entry, entry_value in value.items():
             print(entry, entry_value, sep=':', file=f)
         f.close()
+
+        f_stemmed = open(collection + "_stemmed_index/_" + key, "w")
+        for entry, entry_value in value.items():
+            print(entry, entry_value, sep=':', file=f_stemmed)
+        f_stemmed.close()
+    except FileNotFoundError:
+        print("_"+key+" couldn't be opened - ignoring")
+
+for key, value in stemmed_index.items():
+    try:
+        f_stemmed = open(collection + "_stemmed_index/_" + key, "w")
+        for entry, entry_value in value.items():
+            print(entry, entry_value, sep=':', file=f_stemmed)
+        f_stemmed.close()
     except FileNotFoundError:
         print("_"+key+" couldn't be opened - ignoring")
 
@@ -97,3 +131,10 @@ for key, value in brf_index.items():
     for entry, entry_value in value.items():
         print(entry, entry_value, sep=':', file=brf_file)
     brf_file.close()
+
+for key, value in stemmed_index_brf_index.items():
+    brf_file = open(collection + "_stemmed_brf_index/" + "word_count" + "." + key, "w")
+    for entry, entry_value in value.items():
+        print(entry, entry_value, sep=':', file=brf_file)
+    brf_file.close()
+
