@@ -107,7 +107,7 @@ def get_stats(collections, k, tk, clip_res=False):
         queries = get_queries(collection)
         relevances = get_relevances(collection)
 
-        parameters.original_as_received(collection)
+        parameters.original_as_received()
         original = get_MAP(collection, queries, relevances, clip_res)
 
         ndcg_original_total = 0.0
@@ -139,7 +139,7 @@ def get_stats(collections, k, tk, clip_res=False):
         ndcg_brf_only_sum += (ndcg_brf_only_total / len(queries))
 
         dprint("Starting BRF Optimised")
-        parameters.BRF_optimised(collection)
+        parameters.BRF_optimised()
         BRF_optimised = get_MAP(collection, queries, relevances, clip_res)
 
         ndcg_brf_optimised_total = 0.0

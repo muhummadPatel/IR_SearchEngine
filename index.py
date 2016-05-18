@@ -53,7 +53,7 @@ for key in data:
             doc_length += 1
             if parameters.case_folding:
                 word = word.lower()
-                stemmed_word = word
+                stemmed_word = stemmed_word.lower()
             # Non stemmed index
             if word not in index:
                 index[word] = {key: 1}
@@ -124,6 +124,7 @@ for key, value in stemmed_index.items():
 # write brf index to files
 try:
     os.mkdir(collection + "_brf_index")
+    os.mkdir(collection + "_stemmed_brf_index")
 except:
     pass
 for key, value in brf_index.items():
@@ -137,4 +138,3 @@ for key, value in stemmed_index_brf_index.items():
     for entry, entry_value in value.items():
         print(entry, entry_value, sep=':', file=brf_file)
     brf_file.close()
-

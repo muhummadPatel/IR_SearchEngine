@@ -1,24 +1,19 @@
-import indexing_util
-# simple extended boolean search engine: configurable parameters
-# Hussein Suleman
-# 21 April 2016
-
 debug_print = False
 BRF_explore_params = True
-normalization = None
-stemming = None
-case_folding = None
-stop_words = None
-log_tf = None
-use_idf = None
-log_idf = None
-BRF = None
-BRF_k = None
-BRF_tK = None
+normalization = True
+stemming = True
+case_folding = True
+stop_words = True
+log_tf = True
+use_idf = True
+log_idf = True
+BRF = True
+BRF_k = 3
+BRF_tK = 3
 
 
 # Set parameters for each test scenario
-def original_as_received(i):
+def original_as_received():
     global normalization
     global stemming
     global case_folding
@@ -40,7 +35,6 @@ def original_as_received(i):
     BRF = False
     BRF_k = -1
     BRF_tK = -1
-    indexing_util.clean_and_index(i)
 
 
 def BRF_only():
@@ -63,11 +57,12 @@ def BRF_only():
     use_idf = True
     log_idf = True
     BRF = True
-    BRF_k = 1
-    BRF_tK = 3
+    if not BRF_explore_params:
+        BRF_k = 1
+        BRF_tK = 3
 
 
-def BRF_optimised(i):
+def BRF_optimised():
     global normalization
     global stemming
     global case_folding
@@ -87,9 +82,9 @@ def BRF_optimised(i):
     use_idf = True
     log_idf = False
     BRF = True
-    BRF_k = 1
-    BRF_tK = 1
-    indexing_util.clean_and_index(i)
+    if not BRF_explore_params:
+        BRF_k = 1
+        BRF_tK = 1
 
 
 def overall_optimised():
