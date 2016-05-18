@@ -180,6 +180,7 @@ def get_result(collection, query, clip_results=True):
     if parameters.stop_words:
         stop_words_file = open("stop-word-list.txt", "r")
         stop_words = set(stop_words_file.read().splitlines())
+        stop_words_file.close()
 
     # print top k results if BRF not enabled
     accum, titles = run_query(collection, clean_query(query, stop_words))
