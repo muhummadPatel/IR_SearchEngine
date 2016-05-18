@@ -77,8 +77,8 @@ def get_NDCG(collection, test_query, query_relevances, clip_res=False):
     similarity, result, titles = query_tool.get_result(collection, test_query, clip_results=clip_res)
 
     actual_relevances = [query_relevances[int(r) - 1] for r in result]
-    ideal_relevances = sorted(query_relevances, reverse=True)
-    ideal_relevances = ideal_relevances[0:min (len (ideal_relevances), 10)] if clip_res else ideal_relevances
+    ideal_relevances = sorted(actual_relevances, reverse=True)
+    #ideal_relevances = ideal_relevances[0:min (len (ideal_relevances), 10)] if clip_res else ideal_relevances
     dprint("actual_relevances:", actual_relevances)
     dprint("ideal_relevances:", ideal_relevances)
 
