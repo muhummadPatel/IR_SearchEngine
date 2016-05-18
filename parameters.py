@@ -1,7 +1,7 @@
 debug_print = False
 BRF_explore_params = True
 normalization = True
-stemming = True
+stemming = False
 case_folding = True
 stop_words = True
 log_tf = True

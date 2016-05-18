@@ -21,6 +21,7 @@ def clean_query(query, stop_words):
     query = re.sub(r'\s+', ' ', query)
     query_words = query.split(' ')
 
+
     p = porter.PorterStemmer()
     if parameters.stop_words:
         query_words = [query_word for query_word in query_words if query_word not in stop_words]
@@ -39,10 +40,12 @@ def run_query(collection, query_words):
     titles = {}
     f = open(collection + "_index_len", "r")
     lengths = f.read().splitlines()
+    dprint("lengths", lengths)
     f.close()
 
     # get N
     n = len(lengths)
+    dprint("n", n)
 
     # get index for each term and calculate similarities using accumulators
     for term in query_words:

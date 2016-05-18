@@ -11,6 +11,7 @@ from parameters import dprint
 def get_queries(collection):
     collection_filenames = os.listdir(collection)
     query_filenames = [name for name in collection_filenames if "query" in name]
+    query_filenames = sorted(query_filenames)
     dprint("query filenames:", query_filenames)
 
     queries = []
@@ -26,6 +27,7 @@ def get_queries(collection):
 def get_relevances(collection):
     collection_filenames = os.listdir(collection)
     relevance_filenames = [name for name in collection_filenames if "relevance" in name]
+    relevance_filenames = sorted(relevance_filenames)  
     dprint("relevance filenames:", relevance_filenames)
 
     relevances = []
@@ -35,8 +37,7 @@ def get_relevances(collection):
             int_rels = [int(i) for i in r.read().splitlines()]
             relevances.append(int_rels)
     dprint("relevances:", relevances)
-    dprint("# relevance judgements for query 1:", len(relevances[0]))
-
+    dprint("# relevance judgements for query 2:", len(relevances[1]))
     return relevances
 
 
@@ -76,7 +77,8 @@ def get_NDCG(collection, test_query, query_relevances, clip_res=False):
     similarity, result, titles = query_tool.get_result(collection, test_query, clip_results=clip_res)
 
     actual_relevances = [query_relevances[int(r) - 1] for r in result]
-    ideal_relevances = sorted(actual_relevances, reverse=True)
+    ideal_relevances = sorted(query_relevances, reverse=True)
+    ideal_relevances = ideal_relevances[0:min (len (ideal_relevances), 10)] if clip_res else ideal_relevances
     dprint("actual_relevances:", actual_relevances)
     dprint("ideal_relevances:", ideal_relevances)
 
@@ -95,7 +97,7 @@ def get_NDCG(collection, test_query, query_relevances, clip_res=False):
         dprint("ZeroDivError", disc_cum_gain, ideal_disc_cum_gain)
         dprint("actual_relevances:", actual_relevances)
         dprint("ideal_relevances:", ideal_relevances)
-        return -1
+        return 0
 
 def get_stats(collections, k, tk, clip_res=False):
     parameters.BRF_k = k
