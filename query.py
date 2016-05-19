@@ -136,12 +136,7 @@ def BRF(collection, doc_ids, query, stop_words):
         df = 1.0 / idfs[term]
         tf = itfs[term]
         term_accum[term] = (float(tf) * float(df))
-    # Don't think we can just naively do this the same way he does it for documents
-    #   if parameters.log_idf:
-    #        df = math.log (1 + N/idfs[term])
-    #
-    #    if parameters.log_tf:
-    #        tf = (1 + math.log (tf))
+
 
     # Sort the term rankings
     result = sorted(term_accum, key=term_accum.__getitem__, reverse=True)

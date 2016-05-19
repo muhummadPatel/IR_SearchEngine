@@ -77,8 +77,7 @@ def get_NDCG(collection, test_query, query_relevances, clip_res=False):
     similarity, result, titles = query_tool.get_result(collection, test_query, clip_results=clip_res)
 
     actual_relevances = [query_relevances[int(r) - 1] for r in result]
-    ideal_relevances = sorted(query_relevances, reverse=True)
-    ideal_relevances = ideal_relevances[0:min (len (ideal_relevances), 10)] if clip_res else ideal_relevances
+    ideal_relevances = sorted(actual_relevances, reverse=True)
     dprint("actual_relevances:", actual_relevances)
     dprint("ideal_relevances:", ideal_relevances)
 
@@ -97,7 +96,7 @@ def get_NDCG(collection, test_query, query_relevances, clip_res=False):
         dprint("ZeroDivError", disc_cum_gain, ideal_disc_cum_gain)
         dprint("actual_relevances:", actual_relevances)
         dprint("ideal_relevances:", ideal_relevances)
-        return 0
+        return 1
 
 def get_stats(collections, k, tk, clip_res=False):
     parameters.BRF_k = k
@@ -156,43 +155,24 @@ def get_stats(collections, k, tk, clip_res=False):
 
         ndcg_brf_optimised_sum += (ndcg_brf_optimised_total / len(queries))
 
-        # parameters.overall_optimised()
-        # overall_optimised = get_MAP(collection, queries, relevances, clip_res)
-        #
-        # ndcg_overall_optimised_total = 0.0
-        # dprint("_____ NDCG for queries in", collection,"_____")
-        # for i in range(len(queries)):
-        #     ndcg_overall_optimised = get_NDCG(collection, queries[i], relevances[i], clip_res)
-        #
-        #     ndcg_overall_optimised_total += ndcg_overall_optimised
-        #
-        #     dprint("query:", queries[i].strip())
-        #     dprint("NDCG overall optimised:", ndcg_overall_optimised)
-        #
-        # ndcg_overall_optimised_total += (ndcg_overall_optimised_total / len(queries))
-
         map_original_sum += original
         map_BRF_only_sum += BRF_only
         map_BRF_optimised_sum += BRF_optimised
-        #map_overall_optimised_sum += overall_optimised
 
         dprint("_____ Mean average precision for", collection,"_____")
         dprint("MAP original:", original)
         dprint("MAP BRF only:", BRF_only, "\n")
         dprint("MAP BRF optimised:", BRF_optimised)
-        #dprint("MAP global optimised:", overall_optimised, "\n")
 
 
     num_testbeds = len(collections)
     avg_map_original = map_original_sum / num_testbeds
     avg_map_brf_only = map_BRF_only_sum / num_testbeds
     avg_map_brf_optimised = map_BRF_optimised_sum / num_testbeds
-    #avg_map_overall_optimised = map_BRF_optimised_sum / num_testbeds
 
     avg_ndcg_original = ndcg_original_sum / num_testbeds
     avg_ndcg_brf_only = ndcg_brf_only_sum / num_testbeds
     avg_ndcg_brf_optimised = ndcg_brf_optimised_sum / num_testbeds
-    #avg_ndcg_overall_optimised = ndcg_overall_optimised_sum / num_testbeds
 
     return {
         "num_testbeds": num_testbeds,
@@ -252,24 +232,20 @@ def main(collections):
     print("avg_map_original:", stats10["avg_map_original"])
     print("avg_map_brf_only:", stats10["avg_map_brf_only"])
     print("avg_map_brf_optimised:", stats10["avg_map_brf_optimised"])
-    #print("avg_map_overall_optimised:", stats10["avg_map_after"])
     print("-----")
     print("avg_ndcg_original:", stats10["avg_ndcg_original"])
     print("avg_ndcg_brf_only:", stats10["avg_ndcg_brf_only"])
     print("avg_ndcg_brf_optimised:", stats10["avg_ndcg_brf_optimised"])
-    #print("avg_ndcg_overall_optimised:", stats10["avg_ndcg_after"])
     print("=====")
     print("Using 200 results:")
     print("-----")
     print("avg_map_original:", stats200["avg_map_original"])
     print("avg_map_brf_only:", stats200["avg_map_brf_only"])
     print("avg_map_brf_optimised:", stats200["avg_map_brf_optimised"])
-    #print("avg_map_overall_optimised:", stats200["avg_map_after"])
     print("-----")
     print("avg_ndcg_original:", stats200["avg_ndcg_original"])
     print("avg_ndcg_brf_only:", stats200["avg_ndcg_brf_only"])
     print("avg_ndcg_brf_optimised:", stats200["avg_ndcg_brf_optimised"])
-    #print("avg_ndcg_overall_optimised:", stats200["avg_ndcg_after"])
     print("=====")
 
 if __name__ == "__main__":
