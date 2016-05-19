@@ -156,7 +156,6 @@ def BRF(collection, doc_ids, query, stop_words):
             i += 1
         g += 1
 
-
     dprint("Expanded query words: ")
     dprint(query_words)
 

@@ -102,8 +102,8 @@ def get_stats(collections, k, tk, clip_res=False):
     parameters.BRF_k = k
     parameters.BRF_tK = tk
 
-    map_original_sum = map_BRF_only_sum = map_BRF_optimised_sum = map_overall_optimised_sum = 0.0
-    ndcg_original_sum = ndcg_brf_only_sum = ndcg_brf_optimised_sum = ndcg_overall_optimised_sum = 0.0
+    map_original_sum = map_BRF_only_sum = map_BRF_optimised_sum = 0.0
+    ndcg_original_sum = ndcg_brf_only_sum = ndcg_brf_optimised_sum = 0.0
     for collection in collections:
         queries = get_queries(collection)
         relevances = get_relevances(collection)

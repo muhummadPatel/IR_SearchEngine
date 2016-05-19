@@ -33,8 +33,6 @@ def original_as_received():
     use_idf = True
     log_idf = True
     BRF = False
-    BRF_k = -1
-    BRF_tK = -1
 
 
 def BRF_only():
